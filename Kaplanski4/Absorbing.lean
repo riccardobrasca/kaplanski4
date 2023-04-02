@@ -2,6 +2,7 @@ import Mathlib.GroupTheory.Submonoid.Basic
 import Mathlib.Algebra.Divisibility.Basic
 import Mathlib.GroupTheory.Submonoid.Membership
 import Mathlib.Algebra.Associated
+import Mathlib.RingTheory.Prime
 
 namespace Submonoid
 
@@ -67,6 +68,27 @@ theorem Submonoid.prod_absorbing (s : Submonoid M) (t : Submonoid N) :
     exact
       ⟨(z, w), Submonoid.mem_prod.2 ⟨hz, hw⟩, (Associated.prod _ _ _ _).2 ⟨hz₂, hw₂⟩, (z', w'),
         Submonoid.mem_prod.2 ⟨hz', hw'⟩, (Associated.prod _ _ _ _).2 ⟨hz'₂, hw'₂⟩⟩
+
+theorem Submonoid.powers_prime_absorbing {R : Type _} [CommRing R] [IsDomain R] (p : R) (hn : Prime p) : (Submonoid.powers p).Absorbing :=
+  by
+  rintro x y hxy
+  cases' ((Submonoid.mem_powers_iff _ _).1 hxy) with m hm
+  
+  let a := (1 : R)
+  have ha : a=1 := rfl
+  rw [← one_mul (p^m), ← ha] at hm
+  have hxy₂ := mul_eq_mul_prime_pow hn (Eq.symm hm)
+  rw [ha] at hxy₂
+  rcases hxy₂ with ⟨i, j, b, c, ⟨hij, hbc, hx, hy⟩⟩ 
+
+  refine' ⟨p^i, (Submonoid.mem_powers_iff _ _).2 ⟨i, rfl⟩, (associated_isUnit_mul_right_iff (isUnit_of_mul_eq_one _ _ (Eq.symm hbc))).1 _, p^j, (Submonoid.mem_powers_iff _ _).2 ⟨j, rfl⟩, _⟩
+  rw [← hx]
+  exact Associated.refl x
+
+  rw [mul_comm] at hbc
+  refine' (associated_isUnit_mul_right_iff (isUnit_of_mul_eq_one _ _ (Eq.symm hbc))).1 _
+  rw [← hy]
+  exact Associated.refl y
 
 end Basic
 

@@ -1,64 +1,56 @@
-import Mathlib.Algebra.Module.Submodule.Lattice
-import Mathlib.RingTheory.Ideal.Basic
-import Mathlib.RingTheory.Ideal.Operations
-import Mathlib.Data.Set.Basic
-import Mathlib.RingTheory.UniqueFactorizationDomain
 import Mathlib.RingTheory.PrincipalIdealDomain
 import Kaplanski4.Absorbing
 
 variable {R : Type _} [CommRing R] (S : Submonoid R)
 
-/-- Explication -/
-def foo :=
+/-- The set of ideals of the ring R which do not intersect the submonoid S -/
+private def foo :=
   { I : Ideal R | (I : Set R) ∩ S = ∅ }
 
-theorem foo_def (P : Ideal R) : P ∈ foo S ↔ (P : Set R) ∩ S = ∅ :=
+private theorem foo_def {P : Ideal R} : P ∈ foo S ↔ (P : Set R) ∩ S = ∅ :=
   Iff.rfl
 
 variable {P : Ideal R} {S} (hP : P ∈ foo S) (hmax : ∀ I ∈ foo S, P ≤ I → I = P)
 
 section Basic
 
-theorem P_neq_top (hP : P ∈ foo S) : P ≠ ⊤ := fun h =>
-  ((Set.disjoint_left.1 (Set.disjoint_iff_inter_eq_empty.2 ((foo_def _ _).1 hP)))
+theorem ideal_neq_top : P ≠ ⊤ := fun h =>
+  ((Set.disjoint_left.1 (Set.disjoint_iff_inter_eq_empty.2 ((foo_def _).1 hP)))
       (P.eq_top_iff_one.1 h)) S.one_mem
 
-theorem gt_inter {I : Ideal R} (h : P < I) : ∃ x : R, x ∈ (I : Set R) ∩ S :=
+theorem mem_inter_of_gt {I : Ideal R} (h : P < I) : ∃ x : R, x ∈ (I : Set R) ∩ S :=
   Set.inter_nonempty.1
     (Set.nonempty_iff_ne_empty.2 fun h₂ =>
-      (lt_iff_le_and_ne.1 h).2 (Eq.symm ((hmax I) h₂ (lt_iff_le_and_ne.1 h).1)))
+      (lt_iff_le_and_ne.1 h).2 ((hmax I) h₂ (lt_iff_le_and_ne.1 h).1).symm)
 
-theorem mem_or_mem' : ∀ {x y : R}, x * y ∈ P → x ∈ P ∨ y ∈ P := by
-  rintro x y hxy
+theorem mem_or_mem_of_mul (x y : R) : x * y ∈ P → x ∈ P ∨ y ∈ P := by
+  intro hxy
   by_contra h
   push_neg  at h
   cases' h with h' h''
   let I := P ⊔ Ideal.span {x}
   let J := P ⊔ Ideal.span {y}
-  have h₁ : ∃ x : R, x ∈ (I : Set R) ∩ S :=
-    by
-    refine' gt_inter hmax (lt_of_le_of_ne' le_sup_left _)
+  have h₁ : ∃ x : R, x ∈ (I : Set R) ∩ S := by
+    refine' mem_inter_of_gt hmax (lt_of_le_of_ne' le_sup_left _)
     intro hI
-    rw [← hI, ← Ideal.span_singleton_le_iff_mem _] at h'
+    rw [← hI, ← I.span_singleton_le_iff_mem] at h'
     exact h' le_sup_right
-  have h₂ : ∃ x : R, x ∈ (J : Set R) ∩ S :=
-    by
-    refine' gt_inter hmax (lt_of_le_of_ne' le_sup_left _)
+  have h₂ : ∃ x : R, x ∈ (J : Set R) ∩ S := by
+    refine' mem_inter_of_gt hmax (lt_of_le_of_ne' le_sup_left _)
     intro hJ
-    rw [← hJ, ← Ideal.span_singleton_le_iff_mem _] at h''
+    rw [← hJ, ← J.span_singleton_le_iff_mem] at h''
     exact h'' le_sup_right
   rcases h₁, h₂ with ⟨⟨s, ⟨hs, hs'⟩⟩, ⟨t, ⟨ht, ht'⟩⟩⟩
   have h₃ : I * J ≤ P := by
-    rw [Ideal.mul_sup _ _ _, Ideal.sup_mul _ _ _, Ideal.sup_mul _ _ _,
-      Ideal.span_singleton_mul_span_singleton]
+    rw [Ideal.mul_sup, Ideal.sup_mul, Ideal.sup_mul, Ideal.span_singleton_mul_span_singleton]
     exact
       sup_le (sup_le Ideal.mul_le_right Ideal.mul_le_left)
-        (sup_le Ideal.mul_le_right ((Ideal.span_singleton_le_iff_mem _).2 hxy))
+        (sup_le Ideal.mul_le_right (P.span_singleton_le_iff_mem.2 hxy))
   exact
     Set.eq_empty_iff_forall_not_mem.1 hP (s * t) ⟨h₃ (Ideal.mul_mem_mul hs ht), S.mul_mem hs' ht'⟩
 
-theorem theo3 : P.IsPrime :=
-  ⟨P_neq_top hP, fun h => mem_or_mem' hP hmax h⟩
+theorem isPrime_of_maximal : P.IsPrime :=
+  ⟨ideal_neq_top hP, fun h => mem_or_mem_of_mul hP hmax _ _ h⟩
 
 end Basic
 

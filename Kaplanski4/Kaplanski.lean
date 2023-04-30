@@ -56,23 +56,23 @@ end Basic
 
 section Existence
 
-theorem condition_Zorns_lemma (C : Set (Ideal R)) (hC : C ⊆ foo S) (hC₂ : IsChain (· ≤ ·) C)
-    (I : Ideal R) (hI : I ∈ C) : ∃ (P : Ideal R), P ∈ foo S ∧ ∀ J : Ideal R, J ∈ C → J ≤ P := by
+theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ foo S) (hC₂ : IsChain (· ≤ ·) C)
+    (I : Ideal R) (hI : I ∈ C) : ∃ P, P ∈ foo S ∧ ∀ J, J ∈ C → J ≤ P := by
   refine' ⟨supₛ C, _, fun z hz => le_supₛ hz⟩
   rw [foo_def, Set.eq_empty_iff_forall_not_mem]
   rintro x hx
-  rcases(Submodule.mem_supₛ_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
+  rcases (Submodule.mem_supₛ_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
   have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
   exact hx₂ (hC hJ₁)
 
-theorem prop_2 (hS : (0 : R) ∉ S) : ∃ P ∈ foo S, ∀ I ∈ foo S, P ≤ I → I = P := by
-  have hx : (0 : Ideal R) ∈ foo S :=  by
+theorem exists_maximal_ideal (hS : 0 ∉ S) : ∃ P ∈ foo S, ∀ I ∈ foo S, P ≤ I → I = P := by
+  have hx : 0 ∈ foo S := by
     rw [foo_def, Set.eq_empty_iff_forall_not_mem]
     rintro y ⟨hy₁, hy₂⟩
     rw [SetLike.mem_coe, Ideal.zero_eq_bot, Ideal.mem_bot] at hy₁
     rw [hy₁] at hy₂
     exact hS hy₂
-  rcases zorn_nonempty_partialOrder₀ _ condition_Zorns_lemma 0 hx with ⟨J, ⟨hJ, ⟨_, hJ₃⟩⟩⟩
+  rcases zorn_nonempty_partialOrder₀ _ hypothesis_zorn_lemma _ hx with ⟨J, ⟨hJ, ⟨_, hJ₃⟩⟩⟩
   exact ⟨J, hJ, hJ₃⟩
 
 end Existence
@@ -173,12 +173,12 @@ theorem theo1_gauche (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃
   refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
   have ha₂ : Ideal.span {a} ∉ foo S := by
     intro h
-    rcases prop_2 hzero with ⟨P, ⟨hP, hP₂⟩⟩
+    rcases exists_maximal_ideal hzero with ⟨P, ⟨hP, hP₂⟩⟩
     have hP₃ : P ≠ 0 := by
       intro h₂
       rw [h₂, Ideal.zero_eq_bot] at hP₂
       exact ha (Ideal.span_singleton_eq_bot.1 (hP₂ (Ideal.span {a}) h (zero_le (Ideal.span {a}))))
-    rcases(H P) hP₃ (theo3 hP hP₂) with ⟨x, ⟨H₃, H₄⟩⟩
+    rcases(H P) hP₃ (isPrime_of_maximal hP hP₂) with ⟨x, ⟨H₃, H₄⟩⟩
     rw [foo_def, Set.eq_empty_iff_forall_not_mem] at hP
     exact hP x ⟨H₃, Submonoid.subset_closure H₄⟩
   rw [foo_def, ← Ne.def] at ha₂

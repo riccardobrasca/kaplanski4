@@ -4,18 +4,18 @@ import Kaplanski4.Absorbing
 variable {R : Type _} [CommRing R] (S : Submonoid R)
 
 /-- The set of ideals of the ring R which do not intersect the submonoid S -/
-def Kaplanski.set :=
+def Kaplansky.set :=
   { I : Ideal R | (I : Set R) ∩ S = ∅ }
 
-theorem Kaplanski.set_def {P : Ideal R} : P ∈ Kaplanski.set S ↔ (P : Set R) ∩ S = ∅ :=
+theorem Kaplansky.set_def {P : Ideal R} : P ∈ Kaplansky.set S ↔ (P : Set R) ∩ S = ∅ :=
   Iff.rfl
 
-variable {P : Ideal R} {S} (hP : P ∈ Kaplanski.set S) (hmax : ∀ I ∈ Kaplanski.set S, P ≤ I → I = P)
+variable {P : Ideal R} {S} (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P)
 
 section Basic
 
 theorem ideal_neq_top : P ≠ ⊤ := fun h =>
-  ((Set.disjoint_left.1 (Set.disjoint_iff_inter_eq_empty.2 ((Kaplanski.set_def _).1 hP)))
+  ((Set.disjoint_left.1 (Set.disjoint_iff_inter_eq_empty.2 ((Kaplansky.set_def _).1 hP)))
       (P.eq_top_iff_one.1 h)) S.one_mem
 
 theorem exists_mem_inter_of_gt {I : Ideal R} (h : P < I) : ∃ x : R, x ∈ (I : Set R) ∩ S :=
@@ -56,18 +56,18 @@ end Basic
 
 section Existence
 
-theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplanski.set S) (hC₂ : IsChain (· ≤ ·) C)
-    (I : Ideal R) (hI : I ∈ C) : ∃ P, P ∈ Kaplanski.set S ∧ ∀ J, J ∈ C → J ≤ P := by
+theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S) (hC₂ : IsChain (· ≤ ·) C)
+    (I : Ideal R) (hI : I ∈ C) : ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
   refine' ⟨supₛ C, _, fun z hz => le_supₛ hz⟩
-  rw [Kaplanski.set_def, Set.eq_empty_iff_forall_not_mem]
+  rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
   rintro x hx
   rcases (Submodule.mem_supₛ_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
   have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
   exact hx₂ (hC hJ₁)
 
-theorem exists_maximal_ideal (hS : 0 ∉ S) : ∃ P ∈ Kaplanski.set S, ∀ I ∈ Kaplanski.set S, P ≤ I → I = P := by
-  have hx : 0 ∈ Kaplanski.set S := by
-    rw [Kaplanski.set_def, Set.eq_empty_iff_forall_not_mem]
+theorem exists_maximal_ideal (hS : 0 ∉ S) : ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
+  have hx : 0 ∈ Kaplansky.set S := by
+    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
     rintro y ⟨hy₁, hy₂⟩
     rw [SetLike.mem_coe, Ideal.zero_eq_bot, Ideal.mem_bot] at hy₁
     rw [hy₁] at hy₂
@@ -171,7 +171,7 @@ theorem theo1_gauche (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃
   rcases Submonoid.exists_multiset_of_mem_closure h with ⟨l, ⟨hl, hprod⟩⟩
   exact not_prime_zero (hl 0 (Multiset.prod_eq_zero_iff.1 hprod))
   refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
-  have ha₂ : Ideal.span {a} ∉ Kaplanski.set S := by
+  have ha₂ : Ideal.span {a} ∉ Kaplansky.set S := by
     intro h
     rcases exists_maximal_ideal hzero with ⟨P, ⟨hP, hP₂⟩⟩
     have hP₃ : P ≠ 0 := by
@@ -179,9 +179,9 @@ theorem theo1_gauche (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃
       rw [h₂, Ideal.zero_eq_bot] at hP₂
       exact ha (Ideal.span_singleton_eq_bot.1 (hP₂ (Ideal.span {a}) h (zero_le (Ideal.span {a}))))
     rcases(H P) hP₃ (isPrime_of_maximal hP hP₂) with ⟨x, ⟨H₃, H₄⟩⟩
-    rw [Kaplanski.set_def, Set.eq_empty_iff_forall_not_mem] at hP
+    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hP
     exact hP x ⟨H₃, Submonoid.subset_closure H₄⟩
-  rw [Kaplanski.set_def, ← Ne.def] at ha₂
+  rw [Kaplansky.set_def, ← Ne.def] at ha₂
   rcases Set.nonempty_iff_ne_empty.2 ha₂ with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
   rw [← hb, mul_comm] at hx₂

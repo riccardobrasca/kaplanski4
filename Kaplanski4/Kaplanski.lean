@@ -18,7 +18,7 @@ theorem ideal_neq_top : P ≠ ⊤ := fun h =>
   ((Set.disjoint_left.1 (Set.disjoint_iff_inter_eq_empty.2 ((Kaplansky.set_def _).1 hP)))
       (P.eq_top_iff_one.1 h)) S.one_mem
 
-theorem exists_mem_inter_of_gt {I : Ideal R} (h : P < I) : ∃ x : R, x ∈ (I : Set R) ∩ S :=
+theorem exists_mem_inter {I : Ideal R} (h : P < I) : ∃ x : R, x ∈ (I : Set R) ∩ S :=
   Set.inter_nonempty.1
     (Set.nonempty_iff_ne_empty.2 fun h₂ =>
       (lt_iff_le_and_ne.1 h).2 ((hmax I) h₂ (lt_iff_le_and_ne.1 h).1).symm)
@@ -31,12 +31,12 @@ theorem mem_or_mem_of_mul_mem (x y : R) : x * y ∈ P → x ∈ P ∨ y ∈ P :=
   let I := P ⊔ Ideal.span {x}
   let J := P ⊔ Ideal.span {y}
   have h₁ : ∃ x : R, x ∈ (I : Set R) ∩ S := by
-    refine' exists_mem_inter_of_gt hmax (lt_of_le_of_ne' le_sup_left _)
+    refine' exists_mem_inter hmax (lt_of_le_of_ne' le_sup_left _)
     intro hI
     rw [← hI, ← I.span_singleton_le_iff_mem] at h'
     exact h' le_sup_right
   have h₂ : ∃ x : R, x ∈ (J : Set R) ∩ S := by
-    refine' exists_mem_inter_of_gt hmax (lt_of_le_of_ne' le_sup_left _)
+    refine' exists_mem_inter hmax (lt_of_le_of_ne' le_sup_left _)
     intro hJ
     rw [← hJ, ← J.span_singleton_le_iff_mem] at h''
     exact h'' le_sup_right
@@ -79,22 +79,26 @@ end Existence
 
 section Kaplansky
 
-theorem Multiset.prod_mem_ideal {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
-    s.prod ∈ I ↔ ∃ (p : R)(_ : p ∈ s), p ∈ I := by
+theorem exists_mem_of_mem {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) : 
+    Multiset.prod s ∈ I → ∃ (p : R) (_ : p ∈ s), p ∈ I := by
+  intro hs
+  by_contra h
+  push_neg at h
+  have hs₃ : s.prod ∉ I
+  refine' Multiset.prod_induction _ _ _ _ h
+  · rintro a b ha hb
+    by_contra h
+    cases' (Ideal.isPrime_iff.1 hI).2 h with hI₂ hI₃
+    exact ha hI₂
+    exact hb hI₃
+  exact fun h₂ => (Ideal.isPrime_iff.1 hI).1 (I.eq_top_iff_one.2 h₂)
+  exact hs₃ hs
+
+theorem mem_iff {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
+    s.prod ∈ I ↔ ∃ (p : R) (_ : p ∈ s), p ∈ I := by
   classical
     constructor
-    · intro hs
-      by_contra h
-      push_neg  at h
-      have hs₃ : s.prod ∉ I
-      refine' Multiset.prod_induction _ _ _ _ h
-      · rintro a b ha hb
-        by_contra h
-        cases' (Ideal.isPrime_iff.1 hI).2 h with hI₂ hI₃
-        exact ha hI₂
-        exact hb hI₃
-      exact fun h₂ => (Ideal.isPrime_iff.1 hI).1 ((Ideal.eq_top_iff_one _).2 h₂)
-      exact hs₃ hs
+    exact exists_mem_of_mem s hI
     · intro hs
       rcases hs with ⟨p, ⟨hs₂, hs₃⟩⟩
       rw [← Multiset.prod_erase hs₂]
@@ -118,7 +122,7 @@ theorem theo1_droite [UniqueFactorizationMonoid R] {I : Ideal R} (hI : I ≠ ⊥
     cases' UniqueFactorizationMonoid.factors_prod ha₂ with u ha₃
     rw [← ha₃] at ha₁
     cases' (Ideal.IsPrime.mem_or_mem hI₂) ha₁ with ha₄ ha₅
-    · rcases(Multiset.prod_mem_ideal (UniqueFactorizationMonoid.factors a) hI₂).1 ha₄ with
+    · rcases(mem_iff (UniqueFactorizationMonoid.factors a) hI₂).1 ha₄ with
         ⟨p, ⟨ha₅, ha₆⟩⟩
       refine' ⟨p, ha₆, UniqueFactorizationMonoid.prime_of_factor p ha₅⟩
     · exfalso

@@ -104,17 +104,11 @@ theorem mem_iff {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
       rw [← Multiset.prod_erase hs₂]
       exact Ideal.mul_mem_right _ _ hs₃
 
-variable (R)
-
-/-- The set of prime elements. -/
-def primes :=
-  { r : R | Prime r }
+variable (R) 
 
 variable [IsDomain R]
 
-variable {R}
-
-theorem theo1_droite [UniqueFactorizationMonoid R] {I : Ideal R} (hI : I ≠ ⊥) (hI₂ : I.IsPrime) :
+theorem exists_prime_of_uniqueFactorizationMonoid [UniqueFactorizationMonoid R] {I : Ideal R} (hI : I ≠ ⊥) (hI₂ : I.IsPrime) :
     ∃ x ∈ I, Prime x := by
   classical
     have ha : ∃ a : R, a ∈ I ∧ a ≠ 0 := Submodule.exists_mem_ne_zero_of_ne_bot hI
@@ -122,13 +116,15 @@ theorem theo1_droite [UniqueFactorizationMonoid R] {I : Ideal R} (hI : I ≠ ⊥
     cases' UniqueFactorizationMonoid.factors_prod ha₂ with u ha₃
     rw [← ha₃] at ha₁
     cases' (Ideal.IsPrime.mem_or_mem hI₂) ha₁ with ha₄ ha₅
-    · rcases(mem_iff (UniqueFactorizationMonoid.factors a) hI₂).1 ha₄ with
+    · rcases (mem_iff (UniqueFactorizationMonoid.factors a) hI₂).1 ha₄ with
         ⟨p, ⟨ha₅, ha₆⟩⟩
       refine' ⟨p, ha₆, UniqueFactorizationMonoid.prime_of_factor p ha₅⟩
     · exfalso
-      exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ (Units.isUnit u))
+      exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ u.isUnit)
 
-variable (R)
+/-- The set of prime elements. -/
+def primes :=
+  { r : R | Prime r }
 
 theorem primes_mem_mul : (Submonoid.closure (primes R)).Absorbing := by
   classical

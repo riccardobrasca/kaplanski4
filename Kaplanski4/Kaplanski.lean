@@ -126,7 +126,7 @@ theorem exists_prime_of_uniqueFactorizationMonoid [UniqueFactorizationMonoid R] 
 def primes :=
   { r : R | Prime r }
 
-theorem primes_mem_mul : (Submonoid.closure (primes R)).Absorbing := by
+theorem submonoid.closure_primes_absorbing : (Submonoid.closure (primes R)).Absorbing := by
   classical
     rw [Submonoid.absorbing_iff_of_comm]
     intro a b hab
@@ -136,7 +136,7 @@ theorem primes_mem_mul : (Submonoid.closure (primes R)).Absorbing := by
     rintro s hind b a _ ⟨hprime, hprod⟩
     rcases s.empty_or_exists_mem with (hempty | ⟨i, hi⟩)
     · simp [hempty] at hprod
-      exact ⟨1, Submonoid.one_mem _, associated_one_of_mul_eq_one _ hprod.symm⟩
+      exact ⟨1, (Submonoid.closure (primes R)).one_mem, associated_one_of_mul_eq_one _ hprod.symm⟩
     rw [← Multiset.prod_erase hi] at hprod
     rcases(hprime i hi).dvd_or_dvd ⟨(s.erase i).prod, hprod.symm⟩ with (⟨x, hxb⟩ | ⟨x, hxa⟩)
     · suffices ∃ z ∈ Submonoid.closure (primes R), Associated x z by
@@ -161,33 +161,42 @@ theorem primes_mem_mul : (Submonoid.closure (primes R)).Absorbing := by
       exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hbxmem
         ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
 
-variable {R}
-
-theorem theo1_gauche (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
-    UniqueFactorizationMonoid R := by
-  let S := Submonoid.closure (primes R)
-  have hzero : (0 : R) ∉ S
-  intro h
-  rcases Submonoid.exists_multiset_of_mem_closure h with ⟨l, ⟨hl, hprod⟩⟩
-  exact not_prime_zero (hl 0 (Multiset.prod_eq_zero_iff.1 hprod))
-  refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
-  have ha₂ : Ideal.span {a} ∉ Kaplansky.set S := by
+theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0) (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) : 
+    Ideal.span {a} ∉ Kaplansky.set (Submonoid.closure (primes R)) := by
+  have hzero : 0 ∉ Submonoid.closure (primes R) := by
     intro h
-    rcases exists_maximal_ideal hzero with ⟨P, ⟨hP, hP₂⟩⟩
-    have hP₃ : P ≠ 0 := by
-      intro h₂
-      rw [h₂, Ideal.zero_eq_bot] at hP₂
-      exact ha (Ideal.span_singleton_eq_bot.1 (hP₂ (Ideal.span {a}) h (zero_le (Ideal.span {a}))))
-    rcases(H P) hP₃ (isPrime_of_maximal hP hP₂) with ⟨x, ⟨H₃, H₄⟩⟩
-    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hP
-    exact hP x ⟨H₃, Submonoid.subset_closure H₄⟩
+    rcases Submonoid.exists_multiset_of_mem_closure h with ⟨l, ⟨hl, hprod⟩⟩
+    exact not_prime_zero (hl 0 (Multiset.prod_eq_zero_iff.1 hprod))
+  intro h
+  rcases exists_maximal_ideal hzero with ⟨P, ⟨hP, hP₂⟩⟩
+  have hP₃ : P ≠ 0 := by
+    intro h₂
+    rw [h₂, Ideal.zero_eq_bot] at hP₂
+    exact ha (Ideal.span_singleton_eq_bot.1 (hP₂ (Ideal.span {a}) h (zero_le (Ideal.span {a}))))
+  rcases (H P) hP₃ (isPrime_of_maximal hP hP₂) with ⟨x, ⟨H₃, H₄⟩⟩
+  rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hP
+  exact hP x ⟨H₃, Submonoid.subset_closure H₄⟩
+
+theorem uniqueFactorizationMonoid_of_exists_prime (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
+    UniqueFactorizationMonoid R := by
+  refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
+  have ha₂ := ideal.span_ne_mem_kaplanski.set _ ha H
   rw [Kaplansky.set_def, ← Ne.def] at ha₂
   rcases Set.nonempty_iff_ne_empty.2 ha₂ with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
   rw [← hb, mul_comm] at hx₂
-  obtain ⟨z, hzmem, hass⟩ := Submonoid.absorbing_iff_of_comm.1 (primes_mem_mul _) _ _ hx₂
+  obtain ⟨z, hzmem, hass⟩ := Submonoid.absorbing_iff_of_comm.1 (submonoid.closure_primes_absorbing _) _ _ hx₂
   obtain ⟨m, hprime, hprod⟩ := Submonoid.exists_multiset_of_mem_closure hzmem
   refine' ⟨m, hprime, _⟩
   rwa [hprod, Associated.comm]
+
+set_option synthInstance.etaExperiment true in
+
+theorem uniqueFactorizationMonoid_iff : UniqueFactorizationMonoid R ↔ ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x := by
+  constructor
+  intro u I hI hI₂
+  exact exists_prime_of_uniqueFactorizationMonoid R hI hI₂
+  intro H
+  exact uniqueFactorizationMonoid_of_exists_prime _ H
 
 end Kaplansky

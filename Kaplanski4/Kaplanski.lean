@@ -72,7 +72,7 @@ theorem exists_maximal_ideal (hS : 0 ∉ S) : ∃ P ∈ Kaplansky.set S, ∀ I �
     rw [SetLike.mem_coe, Ideal.zero_eq_bot, Ideal.mem_bot] at hy₁
     rw [hy₁] at hy₂
     exact hS hy₂
-  rcases zorn_nonempty_partialOrder₀ _ hypothesis_zorn_lemma _ hx with ⟨J, ⟨hJ, ⟨_, hJ₃⟩⟩⟩
+  rcases zorn_nonempty_partialOrder₀ _ hypothesis_zorn_lemma _ hx with ⟨J, hJ, _, hJ₃⟩
   exact ⟨J, hJ, hJ₃⟩
 
 end Existence

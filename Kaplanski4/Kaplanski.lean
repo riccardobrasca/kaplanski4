@@ -169,9 +169,9 @@ theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0) (H : ∀ (I : Ide
     exact not_prime_zero (hl 0 (Multiset.prod_eq_zero_iff.1 hprod))
   intro h
   rcases exists_maximal_ideal hzero with ⟨P, ⟨hP, hP₂⟩⟩
-  have hP₃ : P ≠ 0 := by
+  have hP₃ : P ≠ ⊥ := by
     intro h₂
-    rw [h₂, Ideal.zero_eq_bot] at hP₂
+    rw [h₂] at hP₂
     exact ha (Ideal.span_singleton_eq_bot.1 (hP₂ (Ideal.span {a}) h (zero_le (Ideal.span {a}))))
   rcases (H P) hP₃ (isPrime_of_maximal hP hP₂) with ⟨x, ⟨H₃, H₄⟩⟩
   rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hP

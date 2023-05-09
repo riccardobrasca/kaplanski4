@@ -79,7 +79,7 @@ theorem Submonoid.powers_prime_absorbing {R : Type _} [CommRing R] [IsDomain R] 
   rw [← one_mul (p^m), ← ha] at hm
   have hxy₂ := mul_eq_mul_prime_pow hn (Eq.symm hm)
   rw [ha] at hxy₂
-  rcases hxy₂ with ⟨i, j, b, c, ⟨hij, hbc, hx, hy⟩⟩ 
+  rcases hxy₂ with ⟨i, j, b, c, ⟨_, hbc, hx, hy⟩⟩ 
 
   refine' ⟨p^i, (Submonoid.mem_powers_iff _ _).2 ⟨i, rfl⟩, (associated_isUnit_mul_right_iff (isUnit_of_mul_eq_one _ _ (Eq.symm hbc))).1 _, p^j, (Submonoid.mem_powers_iff _ _).2 ⟨j, rfl⟩, _⟩
   rw [← hx]

@@ -108,16 +108,15 @@ variable (R)
 
 variable [IsDomain R]
 
-theorem exists_prime_of_uniqueFactorizationMonoid [UniqueFactorizationMonoid R] {I : Ideal R} (hI : I ≠ ⊥) (hI₂ : I.IsPrime) :
-    ∃ x ∈ I, Prime x := by
+theorem exists_prime_of_uniqueFactorizationMonoid [UniqueFactorizationMonoid R] {I : Ideal R}
+  (hI : I ≠ ⊥) (hI₂ : I.IsPrime) : ∃ x ∈ I, Prime x := by
   classical
     have ha : ∃ a : R, a ∈ I ∧ a ≠ 0 := Submodule.exists_mem_ne_zero_of_ne_bot hI
     rcases ha with ⟨a, ⟨ha₁, ha₂⟩⟩
     cases' UniqueFactorizationMonoid.factors_prod ha₂ with u ha₃
     rw [← ha₃] at ha₁
     cases' (Ideal.IsPrime.mem_or_mem hI₂) ha₁ with ha₄ ha₅
-    · rcases (mem_iff (UniqueFactorizationMonoid.factors a) hI₂).1 ha₄ with
-        ⟨p, ⟨ha₅, ha₆⟩⟩
+    · rcases (mem_iff (UniqueFactorizationMonoid.factors a) hI₂).1 ha₄ with ⟨p, ha₅, ha₆⟩
       refine' ⟨p, ha₆, UniqueFactorizationMonoid.prime_of_factor p ha₅⟩
     · exfalso
       exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ u.isUnit)
@@ -168,12 +167,12 @@ theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0) (H : ∀ (I : Ide
     rcases Submonoid.exists_multiset_of_mem_closure h with ⟨l, ⟨hl, hprod⟩⟩
     exact not_prime_zero (hl 0 (Multiset.prod_eq_zero_iff.1 hprod))
   intro h
-  rcases exists_maximal_ideal hzero with ⟨P, ⟨hP, hP₂⟩⟩
+  rcases exists_maximal_ideal hzero with ⟨P, hP, hP₂⟩
   have hP₃ : P ≠ ⊥ := by
     intro h₂
     rw [h₂] at hP₂
     exact ha (Ideal.span_singleton_eq_bot.1 (hP₂ (Ideal.span {a}) h (zero_le (Ideal.span {a}))))
-  rcases (H P) hP₃ (isPrime_of_maximal hP hP₂) with ⟨x, ⟨H₃, H₄⟩⟩
+  rcases (H P) hP₃ (isPrime_of_maximal hP hP₂) with ⟨x, H₃, H₄⟩
   rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hP
   exact hP x ⟨H₃, Submonoid.subset_closure H₄⟩
 

@@ -79,7 +79,7 @@ end Existence
 
 section Kaplansky
 
-theorem exists_mem_of_mem {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) : 
+theorem exists_mem_of_mem {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
     Multiset.prod s ∈ I → ∃ (p : R) (_ : p ∈ s), p ∈ I := by
   intro hs
   by_contra h
@@ -104,7 +104,7 @@ theorem mem_iff {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
       rw [← Multiset.prod_erase hs₂]
       exact Ideal.mul_mem_right _ _ hs₃
 
-variable (R) 
+variable (R)
 
 variable [IsDomain R]
 
@@ -161,7 +161,7 @@ theorem submonoid.closure_primes_absorbing : (Submonoid.closure (primes R)).Abso
       exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hbxmem
         ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
 
-theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0) (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) : 
+theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0) (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
     Ideal.span {a} ∉ Kaplansky.set (Submonoid.closure (primes R)) := by
   have hzero : 0 ∉ Submonoid.closure (primes R) := by
     intro h
@@ -190,9 +190,8 @@ theorem uniqueFactorizationMonoid_of_exists_prime (H : ∀ (I : Ideal R) (_ : I 
   refine' ⟨m, hprime, _⟩
   rwa [hprod, Associated.comm]
 
-set_option synthInstance.etaExperiment true in
-
-theorem uniqueFactorizationMonoid_iff : UniqueFactorizationMonoid R ↔ ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x := by
+theorem uniqueFactorizationMonoid_iff :
+  UniqueFactorizationMonoid R ↔ ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x := by
   constructor
   intro u I hI hI₂
   exact exists_prime_of_uniqueFactorizationMonoid R hI hI₂

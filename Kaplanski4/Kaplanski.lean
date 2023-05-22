@@ -56,8 +56,9 @@ end Basic
 
 section Existence
 
-theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S) (hC₂ : IsChain (· ≤ ·) C)
-    (I : Ideal R) (hI : I ∈ C) : ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
+theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S)
+    (hC₂ : IsChain (· ≤ ·) C) (I : Ideal R) (hI : I ∈ C) :
+    ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
   refine' ⟨supₛ C, _, fun z hz => le_supₛ hz⟩
   rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
   rintro x hx
@@ -65,7 +66,8 @@ theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S) (
   have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
   exact hx₂ (hC hJ₁)
 
-theorem exists_maximal_ideal (hS : 0 ∉ S) : ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
+theorem exists_maximal_ideal (hS : 0 ∉ S) :
+    ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
   have hx : 0 ∈ Kaplansky.set S := by
     rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
     rintro y ⟨hy₁, hy₂⟩
@@ -160,7 +162,8 @@ theorem submonoid.closure_primes_absorbing : (Submonoid.closure (primes R)).Abso
       exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hbxmem
         ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
 
-theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0) (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
+theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0)
+    (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
     Ideal.span {a} ∉ Kaplansky.set (Submonoid.closure (primes R)) := by
   have hzero : 0 ∉ Submonoid.closure (primes R) := by
     intro h
@@ -176,7 +179,8 @@ theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0) (H : ∀ (I : Ide
   rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hP
   exact hP x ⟨H₃, Submonoid.subset_closure H₄⟩
 
-theorem uniqueFactorizationMonoid_of_exists_prime (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
+theorem uniqueFactorizationMonoid_of_exists_prime
+    (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
     UniqueFactorizationMonoid R := by
   refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
   have ha₂ := ideal.span_ne_mem_kaplanski.set _ ha H
@@ -184,7 +188,8 @@ theorem uniqueFactorizationMonoid_of_exists_prime (H : ∀ (I : Ideal R) (_ : I 
   rcases Set.nonempty_iff_ne_empty.2 ha₂ with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
   rw [← hb, mul_comm] at hx₂
-  obtain ⟨z, hzmem, hass⟩ := Submonoid.absorbing_iff_of_comm.1 (submonoid.closure_primes_absorbing _) _ _ hx₂
+  obtain ⟨z, hzmem, hass⟩ := Submonoid.absorbing_iff_of_comm.1
+    (submonoid.closure_primes_absorbing _) _ _ hx₂
   obtain ⟨m, hprime, hprod⟩ := Submonoid.exists_multiset_of_mem_closure hzmem
   refine' ⟨m, hprime, _⟩
   rwa [hprod, Associated.comm]

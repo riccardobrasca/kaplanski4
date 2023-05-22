@@ -12,6 +12,31 @@ theorem Kaplansky.set_def {P : Ideal R} : P ∈ Kaplansky.set S ↔ (P : Set R) 
 
 variable {P : Ideal R} {S} (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P)
 
+section Existence
+
+theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S)
+    (hC₂ : IsChain (· ≤ ·) C) (I : Ideal R) (hI : I ∈ C) :
+    ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
+  refine' ⟨supₛ C, _, fun z hz => le_supₛ hz⟩
+  rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
+  rintro x hx
+  rcases (Submodule.mem_supₛ_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
+  have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
+  exact hx₂ (hC hJ₁)
+
+theorem exists_maximal_ideal (hS : 0 ∉ S) :
+    ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
+  have hx : 0 ∈ Kaplansky.set S := by
+    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
+    rintro y ⟨hy₁, hy₂⟩
+    rw [SetLike.mem_coe, Ideal.zero_eq_bot, Ideal.mem_bot] at hy₁
+    rw [hy₁] at hy₂
+    exact hS hy₂
+  rcases zorn_nonempty_partialOrder₀ _ hypothesis_zorn_lemma _ hx with ⟨J, hJ, _, hJ₃⟩
+  exact ⟨J, hJ, hJ₃⟩
+
+end Existence
+
 section Basic
 
 theorem ideal_neq_top : P ≠ ⊤ := fun h =>
@@ -53,31 +78,6 @@ theorem isPrime_of_maximal : P.IsPrime :=
   ⟨ideal_neq_top hP, fun h => mem_or_mem_of_mul_mem hP hmax _ _ h⟩
 
 end Basic
-
-section Existence
-
-theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S)
-    (hC₂ : IsChain (· ≤ ·) C) (I : Ideal R) (hI : I ∈ C) :
-    ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
-  refine' ⟨supₛ C, _, fun z hz => le_supₛ hz⟩
-  rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
-  rintro x hx
-  rcases (Submodule.mem_supₛ_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
-  have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
-  exact hx₂ (hC hJ₁)
-
-theorem exists_maximal_ideal (hS : 0 ∉ S) :
-    ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
-  have hx : 0 ∈ Kaplansky.set S := by
-    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
-    rintro y ⟨hy₁, hy₂⟩
-    rw [SetLike.mem_coe, Ideal.zero_eq_bot, Ideal.mem_bot] at hy₁
-    rw [hy₁] at hy₂
-    exact hS hy₂
-  rcases zorn_nonempty_partialOrder₀ _ hypothesis_zorn_lemma _ hx with ⟨J, hJ, _, hJ₃⟩
-  exact ⟨J, hJ, hJ₃⟩
-
-end Existence
 
 section Kaplansky
 

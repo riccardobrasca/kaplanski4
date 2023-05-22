@@ -14,6 +14,8 @@ variable {P : Ideal R} {S} (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplan
 
 section Existence
 
+/-- The proof of 'exists_maximal_ideal' uses Zorn's lemma so the following theorem checks that
+every chain of 'Kaplansky.set S' has an upper bound. -/
 theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S)
     (hC₂ : IsChain (· ≤ ·) C) (I : Ideal R) (hI : I ∈ C) :
     ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
@@ -24,6 +26,8 @@ theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S)
   have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
   exact hx₂ (hC hJ₁)
 
+/-- The existence of a maximal ideal P with respect to the condition P ∩ S = ∅
+(which we will use to prove Kaplansky's criterion). -/
 theorem exists_maximal_ideal (hS : 0 ∉ S) :
     ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
   have hx : 0 ∈ Kaplansky.set S := by
@@ -110,6 +114,8 @@ variable (R)
 
 variable [IsDomain R]
 
+/-- One implication of Kaplansky's criterion (if an integral domain R is a UFD, then every nonzero
+prime ideal contains a prime element). -/
 theorem exists_prime_of_uniqueFactorizationMonoid [UniqueFactorizationMonoid R] {I : Ideal R}
   (hI : I ≠ ⊥) (hI₂ : I.IsPrime) : ∃ x ∈ I, Prime x := by
   classical
@@ -179,6 +185,8 @@ theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0)
   rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hP
   exact hP x ⟨H₃, Submonoid.subset_closure H₄⟩
 
+/-- The other implication of Kaplansky's criterion (if every nonzero prime ideal of
+an integral domain R contains a prime element, then R is a UFD). -/
 theorem uniqueFactorizationMonoid_of_exists_prime
     (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
     UniqueFactorizationMonoid R := by
@@ -194,6 +202,8 @@ theorem uniqueFactorizationMonoid_of_exists_prime
   refine' ⟨m, hprime, _⟩
   rwa [hprod, Associated.comm]
 
+/-- Kaplansky's criterion (an integral domain R is a UFD if and only if every nonzero prime ideal
+contains a prime element). -/
 theorem uniqueFactorizationMonoid_iff :
   UniqueFactorizationMonoid R ↔ ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x := by
   constructor

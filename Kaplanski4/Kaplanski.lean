@@ -26,7 +26,7 @@ theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S)
   have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
   exact hx₂ (hC hJ₁)
 
-/-- The existence of a maximal ideal P with respect to the condition P ∩ S = ∅
+/-- The existence of a maximal element of 'Kaplansky.set S'
 (which we will use to prove Kaplansky's criterion). -/
 theorem exists_maximal_ideal (hS : 0 ∉ S) :
     ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
@@ -43,6 +43,8 @@ end Existence
 
 section Basic
 
+/-- If an ideal P satisfies the condition P ∩ S = ∅, then P ≠ R
+(this is used to prove that P is prime). -/
 theorem ideal_neq_top : P ≠ ⊤ := fun h =>
   ((Set.disjoint_left.1 (Set.disjoint_iff_inter_eq_empty.2 ((Kaplansky.set_def _).1 hP)))
       (P.eq_top_iff_one.1 h)) S.one_mem
@@ -52,6 +54,8 @@ theorem exists_mem_inter {I : Ideal R} (h : P < I) : ∃ x : R, x ∈ (I : Set R
     (Set.nonempty_iff_ne_empty.2 fun h₂ =>
       (lt_iff_le_and_ne.1 h).2 ((hmax I) h₂ (lt_iff_le_and_ne.1 h).1).symm)
 
+/-- This is checked to prove that an ideal P which is maximal with respect to
+the condition P ∩ S = ∅ is also prime. -/
 theorem mem_or_mem_of_mul_mem (x y : R) : x * y ∈ P → x ∈ P ∨ y ∈ P := by
   intro hxy
   by_contra h
@@ -78,6 +82,7 @@ theorem mem_or_mem_of_mul_mem (x y : R) : x * y ∈ P → x ∈ P ∨ y ∈ P :=
   exact
     Set.eq_empty_iff_forall_not_mem.1 hP (s * t) ⟨h₃ (Ideal.mul_mem_mul hs ht), S.mul_mem hs' ht'⟩
 
+/-- If an ideal P is maximal with respect to the condition P ∩ S = ∅, then it is prime. -/
 theorem isPrime_of_maximal : P.IsPrime :=
   ⟨ideal_neq_top hP, fun h => mem_or_mem_of_mul_mem hP hmax _ _ h⟩
 
@@ -133,6 +138,8 @@ theorem exists_prime_of_uniqueFactorizationMonoid [UniqueFactorizationMonoid R] 
 def primes :=
   { r : R | Prime r }
 
+/-- Let a, b ∈ R. If ab can be written as a product of prime elements, then a can be written as
+a product of a unit and prime elements. The same goes for b. -/
 theorem submonoid.closure_primes_absorbing : (Submonoid.closure (primes R)).Absorbing := by
   classical
     rw [Submonoid.absorbing_iff_of_comm]

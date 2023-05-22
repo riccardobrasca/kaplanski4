@@ -1,7 +1,4 @@
-import Mathlib.GroupTheory.Submonoid.Basic
-import Mathlib.Algebra.Divisibility.Basic
 import Mathlib.GroupTheory.Submonoid.Membership
-import Mathlib.Algebra.Associated
 import Mathlib.RingTheory.Prime
 
 namespace Submonoid
@@ -17,17 +14,15 @@ theorem absorbing_def {S : Submonoid M} :
     Absorbing S ↔ ∀ x y, x * y ∈ S → ∃ z ∈ S, Associated x z ∧ ∃ z ∈ S, Associated y z :=
   Iff.rfl
 
-variable (M)
-
-variable (N)
+variable (M) (N)
 
 theorem top_absorbing : (⊤ : Submonoid M).Absorbing := fun x y _ =>
   ⟨x, Submonoid.mem_top _, Associated.refl _, y, Submonoid.mem_top _, Associated.refl _⟩
 
-theorem bot_absorbing : (⊥ : Submonoid M).Absorbing := fun x y hxy =>
-  ⟨1, (⊥ : Submonoid M).one_mem, associated_one_of_mul_eq_one _ (Submonoid.mem_bot.1 hxy), 1,
+theorem bot_absorbing : (⊥ : Submonoid M).Absorbing := fun _ _ hxy =>
+  ⟨1, (⊥ : Submonoid M).one_mem, associated_one_of_mul_eq_one _ hxy, 1,
     (⊥ : Submonoid M).one_mem,
-    associated_one_of_mul_eq_one _ (Submonoid.mem_bot.1 (by rwa [mul_comm] at hxy))⟩
+    associated_one_of_mul_eq_one _ (by rwa [mul_comm] at hxy)⟩
 
 theorem IsUnit.submonoid_absorbing : (IsUnit.submonoid M).Absorbing := fun x y hxy =>
   ⟨x, isUnit_of_mul_isUnit_left hxy, Associated.refl _, y, isUnit_of_mul_isUnit_right hxy,
@@ -73,13 +68,13 @@ theorem Submonoid.powers_prime_absorbing {R : Type _} [CommRing R] [IsDomain R] 
   by
   rintro x y hxy
   cases' ((Submonoid.mem_powers_iff _ _).1 hxy) with m hm
-  
+
   let a := (1 : R)
   have ha : a=1 := rfl
   rw [← one_mul (p^m), ← ha] at hm
   have hxy₂ := mul_eq_mul_prime_pow hn (Eq.symm hm)
   rw [ha] at hxy₂
-  rcases hxy₂ with ⟨i, j, b, c, ⟨_, hbc, hx, hy⟩⟩ 
+  rcases hxy₂ with ⟨i, j, b, c, ⟨_, hbc, hx, hy⟩⟩
 
   refine' ⟨p^i, (Submonoid.mem_powers_iff _ _).2 ⟨i, rfl⟩, (associated_isUnit_mul_right_iff (isUnit_of_mul_eq_one _ _ (Eq.symm hbc))).1 _, p^j, (Submonoid.mem_powers_iff _ _).2 ⟨j, rfl⟩, _⟩
   rw [← hx]

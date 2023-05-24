@@ -43,7 +43,7 @@ theorem Associated.prod (x z : M × N) : Associated x z ↔ Associated x.1 z.1 �
 theorem Submonoid.prod_absorbing (s : Submonoid M) (t : Submonoid N) :
     (s.prod t).Absorbing ↔ Absorbing s ∧ Absorbing t :=
   by
-  refine' ⟨fun h => ⟨fun x y hxy => _, fun x y hxy => _⟩, _⟩
+  refine' ⟨fun h => ⟨fun x y hxy => _, fun x y hxy => _⟩, fun ⟨hs, ht⟩ x y hxy => _⟩
   · specialize h (x, 1) (y, 1)
     rw [Prod.mk_one_mul_mk_one] at h
     rcases h (Submonoid.mem_prod.2 ⟨hxy, t.one_mem⟩) with ⟨a, ha, ha₂, ⟨b, hb, hb₂⟩⟩
@@ -56,8 +56,7 @@ theorem Submonoid.prod_absorbing (s : Submonoid M) (t : Submonoid N) :
     exact
       ⟨a.2, (Submonoid.mem_prod.1 ha).2, ((Associated.prod _ _ _ _).1 ha₂).2, b.2,
         (Submonoid.mem_prod.1 hb).2, ((Associated.prod _ _ _ _).1 hb₂).2⟩
-  · rintro ⟨hs, ht⟩ x y hxy
-    rcases hs x.1 y.1 hxy.1 with ⟨z, hz, hz₂, ⟨z', hz', hz'₂⟩⟩
+  · rcases hs x.1 y.1 hxy.1 with ⟨z, hz, hz₂, ⟨z', hz', hz'₂⟩⟩
     rcases ht x.2 y.2 hxy.2 with ⟨w, hw, hw₂, ⟨w', hw', hw'₂⟩⟩
     exact
       ⟨(z, w), Submonoid.mem_prod.2 ⟨hz, hw⟩, (Associated.prod _ _ _ _).2 ⟨hz₂, hw₂⟩, (z', w'),

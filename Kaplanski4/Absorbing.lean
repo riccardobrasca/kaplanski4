@@ -66,22 +66,13 @@ theorem Submonoid.powers_prime_absorbing {R : Type _} [CommRing R] [IsDomain R] 
   by
   rintro x y hxy
   cases' ((Submonoid.mem_powers_iff _ _).1 hxy) with m hm
-
-  let a := (1 : R)
-  have ha : a=1 := rfl
-  rw [← one_mul (p^m), ← ha] at hm
-  have hxy₂ := mul_eq_mul_prime_pow hn (Eq.symm hm)
-  rw [ha] at hxy₂
-  rcases hxy₂ with ⟨i, j, b, c, ⟨_, hbc, hx, hy⟩⟩
-
-  refine' ⟨p^i, (Submonoid.mem_powers_iff _ _).2 ⟨i, rfl⟩, (associated_isUnit_mul_right_iff (isUnit_of_mul_eq_one _ _ (Eq.symm hbc))).1 _, p^j, (Submonoid.mem_powers_iff _ _).2 ⟨j, rfl⟩, _⟩
-  rw [← hx]
-  exact Associated.refl x
-
+  set a := (1 : R) with ha
+  rw [← one_mul (p^m)] at hm
+  rcases (mul_eq_mul_prime_pow hn hm.symm) with ⟨i, j, _, _, ⟨_, hbc, hx, hy⟩⟩
+  rw [hx, hy]
+  refine' ⟨p^i, (Submonoid.mem_powers_iff _ _).2 ⟨i, rfl⟩, (associated_isUnit_mul_left_iff (isUnit_of_mul_eq_one _ _ hbc.symm)).2 (Associated.refl (p^i)), p^j, (Submonoid.mem_powers_iff _ _).2 ⟨j, rfl⟩, _⟩
   rw [mul_comm] at hbc
-  refine' (associated_isUnit_mul_right_iff (isUnit_of_mul_eq_one _ _ (Eq.symm hbc))).1 _
-  rw [← hy]
-  exact Associated.refl y
+  exact (associated_isUnit_mul_left_iff (isUnit_of_mul_eq_one _ _ hbc.symm)).2 (Associated.refl (p^j))
 
 end Basic
 

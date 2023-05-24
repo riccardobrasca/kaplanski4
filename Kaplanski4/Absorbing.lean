@@ -31,13 +31,12 @@ theorem IsUnit.submonoid_absorbing : (IsUnit.submonoid M).Absorbing := fun x y h
 theorem Associated.prod (x z : M × N) : Associated x z ↔ Associated x.1 z.1 ∧ Associated x.2 z.2 :=
   by
   refine'
-    ⟨_, fun ⟨⟨u₁, hu₁⟩, ⟨u₂, hu₂⟩⟩ =>
+    ⟨fun ⟨u, hu⟩ => _, fun ⟨⟨u₁, hu₁⟩, ⟨u₂, hu₂⟩⟩ =>
       ⟨MulEquiv.prodUnits.invFun (u₁, u₂), Prod.eq_iff_fst_eq_snd_eq.2 ⟨hu₁, hu₂⟩⟩⟩
-  rintro ⟨u, hu⟩
   cases' u.isUnit.exists_right_inv with b hb
-  rw [Prod.mul_def, Prod.mk_eq_one] at hb
-  rw [← hu, Prod.fst_mul, Prod.snd_mul]
-  refine'
+  rw [Prod.mk_eq_one] at hb
+  rw [← hu]
+  exact
     ⟨(associated_mul_isUnit_right_iff (isUnit_of_mul_eq_one _ _ hb.1)).2 (Associated.refl _),
       (associated_mul_isUnit_right_iff (isUnit_of_mul_eq_one _ _ hb.2)).2 (Associated.refl _)⟩
 

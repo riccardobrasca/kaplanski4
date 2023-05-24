@@ -97,10 +97,8 @@ theorem absorbing_iff_of_comm {S : Submonoid M} :
   · rcases hS x y hxy with ⟨z, hz, hz₂, _⟩
     exact ⟨z, hz, hz₂⟩
   · obtain ⟨z, hz, hz₂⟩ := h x y hxy
-    refine' ⟨z, hz, hz₂, _⟩
     rw [mul_comm] at hxy
-    exact h y x hxy
-
+    exact ⟨z, hz, hz₂, h y x hxy⟩
 
 end CommMonoid
 

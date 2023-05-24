@@ -90,7 +90,7 @@ theorem Submonoid.powers_prime_absorbing {R : Type _} [CommRing R] [IsDomain R] 
   p^j, (Submonoid.mem_powers_iff _ _).2 ⟨j, rfl⟩, _⟩
   rw [mul_comm] at hbc
   exact (associated_isUnit_mul_left_iff (isUnit_of_mul_eq_one _ _ hbc.symm)).2
-  (Associated.refl (p^j))
+    (Associated.refl (p^j))
 
 end Basic
 

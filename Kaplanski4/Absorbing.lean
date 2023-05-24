@@ -40,27 +40,40 @@ theorem Associated.prod (x z : M × N) : Associated x z ↔ Associated x.1 z.1 �
     ⟨(associated_mul_isUnit_right_iff (isUnit_of_mul_eq_one _ _ hb.1)).2 (Associated.refl _),
       (associated_mul_isUnit_right_iff (isUnit_of_mul_eq_one _ _ hb.2)).2 (Associated.refl _)⟩
 
+theorem Submonoid.prod_absorbing_right_s (s : Submonoid M) (t : Submonoid N) :
+    (s.prod t).Absorbing → Absorbing s := by
+  rintro h x y hxy
+  specialize h (x, 1) (y, 1)
+  rw [Prod.mk_one_mul_mk_one] at h
+  rcases h (Submonoid.mem_prod.2 ⟨hxy, t.one_mem⟩) with ⟨a, ha, ha₂, ⟨b, hb, hb₂⟩⟩
+  exact
+    ⟨a.1, (Submonoid.mem_prod.1 ha).1, ((Associated.prod _ _ _ _).1 ha₂).1, b.1,
+      (Submonoid.mem_prod.1 hb).1, ((Associated.prod _ _ _ _).1 hb₂).1⟩
+
+theorem Submonoid.prod_absorbing_right_t (s : Submonoid M) (t : Submonoid N) :
+    (s.prod t).Absorbing → Absorbing t := by
+  rintro h x y hxy
+  specialize h (1, x) (1, y)
+  rw [Prod.one_mk_mul_one_mk] at h
+  rcases h (Submonoid.mem_prod.2 ⟨s.one_mem, hxy⟩) with ⟨a, ha, ha₂, ⟨b, hb, hb₂⟩⟩
+  exact
+    ⟨a.2, (Submonoid.mem_prod.1 ha).2, ((Associated.prod _ _ _ _).1 ha₂).2, b.2,
+      (Submonoid.mem_prod.1 hb).2, ((Associated.prod _ _ _ _).1 hb₂).2⟩
+
+theorem Submonoid.prod_absorbing_right (s : Submonoid M) (t : Submonoid N) :
+    (s.prod t).Absorbing → Absorbing s ∧ Absorbing t := fun h => ⟨Submonoid.prod_absorbing_right_s _ _ s t h, Submonoid.prod_absorbing_right_t _ _ s t h⟩
+
+theorem Submonoid.prod_absorbing_left (s : Submonoid M) (t : Submonoid N) :
+    Absorbing s ∧ Absorbing t → (s.prod t).Absorbing := by
+  rintro ⟨hs, ht⟩ x y hxy
+  rcases hs x.1 y.1 hxy.1 with ⟨z, hz, hz₂, ⟨z', hz', hz'₂⟩⟩
+  rcases ht x.2 y.2 hxy.2 with ⟨w, hw, hw₂, ⟨w', hw', hw'₂⟩⟩
+  exact
+    ⟨(z, w), Submonoid.mem_prod.2 ⟨hz, hw⟩, (Associated.prod _ _ _ _).2 ⟨hz₂, hw₂⟩, (z', w'),
+      Submonoid.mem_prod.2 ⟨hz', hw'⟩, (Associated.prod _ _ _ _).2 ⟨hz'₂, hw'₂⟩⟩
+
 theorem Submonoid.prod_absorbing (s : Submonoid M) (t : Submonoid N) :
-    (s.prod t).Absorbing ↔ Absorbing s ∧ Absorbing t :=
-  by
-  refine' ⟨fun h => ⟨fun x y hxy => _, fun x y hxy => _⟩, fun ⟨hs, ht⟩ x y hxy => _⟩
-  · specialize h (x, 1) (y, 1)
-    rw [Prod.mk_one_mul_mk_one] at h
-    rcases h (Submonoid.mem_prod.2 ⟨hxy, t.one_mem⟩) with ⟨a, ha, ha₂, ⟨b, hb, hb₂⟩⟩
-    exact
-      ⟨a.1, (Submonoid.mem_prod.1 ha).1, ((Associated.prod _ _ _ _).1 ha₂).1, b.1,
-        (Submonoid.mem_prod.1 hb).1, ((Associated.prod _ _ _ _).1 hb₂).1⟩
-  · specialize h (1, x) (1, y)
-    rw [Prod.one_mk_mul_one_mk] at h
-    rcases h (Submonoid.mem_prod.2 ⟨s.one_mem, hxy⟩) with ⟨a, ha, ha₂, ⟨b, hb, hb₂⟩⟩
-    exact
-      ⟨a.2, (Submonoid.mem_prod.1 ha).2, ((Associated.prod _ _ _ _).1 ha₂).2, b.2,
-        (Submonoid.mem_prod.1 hb).2, ((Associated.prod _ _ _ _).1 hb₂).2⟩
-  · rcases hs x.1 y.1 hxy.1 with ⟨z, hz, hz₂, ⟨z', hz', hz'₂⟩⟩
-    rcases ht x.2 y.2 hxy.2 with ⟨w, hw, hw₂, ⟨w', hw', hw'₂⟩⟩
-    exact
-      ⟨(z, w), Submonoid.mem_prod.2 ⟨hz, hw⟩, (Associated.prod _ _ _ _).2 ⟨hz₂, hw₂⟩, (z', w'),
-        Submonoid.mem_prod.2 ⟨hz', hw'⟩, (Associated.prod _ _ _ _).2 ⟨hz'₂, hw'₂⟩⟩
+    (s.prod t).Absorbing ↔ Absorbing s ∧ Absorbing t := ⟨Submonoid.prod_absorbing_right _ _ s t, Submonoid.prod_absorbing_left _ _ s t⟩
 
 theorem Submonoid.powers_prime_absorbing {R : Type _} [CommRing R] [IsDomain R] (p : R) (hn : Prime p) : (Submonoid.powers p).Absorbing :=
   by

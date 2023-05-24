@@ -79,7 +79,6 @@ theorem Submonoid.powers_prime_absorbing {R : Type _} [CommRing R] [IsDomain R] 
   by
   rintro x y hxy
   cases' ((Submonoid.mem_powers_iff _ _).1 hxy) with m hm
-  set a := (1 : R) with ha
   rw [← one_mul (p^m)] at hm
   rcases (mul_eq_mul_prime_pow hn hm.symm) with ⟨i, j, _, _, ⟨_, hbc, hx, hy⟩⟩
   rw [hx, hy]

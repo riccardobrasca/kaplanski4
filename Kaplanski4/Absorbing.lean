@@ -90,7 +90,7 @@ theorem submonoid.powers_absorbing {R : Type _} [CommRing R] [IsDomain R] (p : R
 
 end Basic
 
-section CommSemigroup
+section CommMonoid
 
 theorem absorbing_iff_of_comm {S : Submonoid M} :
     Absorbing S ↔ ∀ x y, x * y ∈ S → ∃ z ∈ S, Associated x z := by
@@ -101,6 +101,6 @@ theorem absorbing_iff_of_comm {S : Submonoid M} :
     rw [mul_comm] at hxy
     exact ⟨z, hz, hz₂, h y x hxy⟩
 
-end CommSemigroup
+end CommMonoid
 
 end Submonoid

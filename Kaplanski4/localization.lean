@@ -1,10 +1,10 @@
 import Kaplanski4.Kaplanski
 import Mathlib.RingTheory.Localization.Ideal
 
-lemma is_localization.prime_of_prime {R S : Type _} [CommRing R] [CommRing S] [Algebra R S]
-    [IsDomain R] {M : Submonoid R} [IsLocalization M S] (hM : M ≤ nonZeroDivisors R) (p : R)
+lemma isLocalization.prime_of_prime {R S : Type _} [CommRing R] [CommRing S] [Algebra R S]
+    {M : Submonoid R} [IsLocalization M S] (hM : M ≤ nonZeroDivisors R) (p : R)
     (hp : Prime p) (hp₂ : ∃ (I : Ideal R), Disjoint (M : Set R) (I : Set R) ∧ p ∈ I) :
-    Prime ((algebraMap R S) p) := by
+    Prime (algebraMap R S p) := by
   rcases hp₂ with ⟨I, hI, hp₂⟩
   have hp' := IsLocalization.isPrime_of_isPrime_disjoint M S (Ideal.span {p})
     ((Ideal.span_singleton_prime hp.ne_zero).2 hp)
@@ -25,5 +25,5 @@ lemma isLocalization.uniqueFactorizationMonoid_of_uniqueFactorizationMonoid {R S
   have hI₂ : I ≠ ⊥ :=
     ((lt_iff_le_and_ne.1 (IsLocalization.bot_lt_comap_prime M S hM J hJzero)).2).symm
   obtain ⟨p, hpI, hp⟩ := exists_prime_of_uniqueFactorizationMonoid _ hI₂ hI.1
-  exact ⟨algebraMap R S p, Ideal.mem_comap.mp hpI, is_localization.prime_of_prime hM p hp
+  exact ⟨algebraMap R S p, Ideal.mem_comap.mp hpI, isLocalization.prime_of_prime hM p hp
     ⟨I, hI.2, hpI⟩⟩

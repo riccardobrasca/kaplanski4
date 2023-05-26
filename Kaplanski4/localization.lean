@@ -1,6 +1,9 @@
 import Kaplanski4.Kaplanski
 import Mathlib.RingTheory.Localization.Ideal
 
+/-- Let R be a commutative ring and M be a multiplicatively closed set.
+The image of a prime element p ∈ R by the natural homomorphism is prime in the localization
+(under the condition that p belongs to an ideal disjoint from M). -/
 lemma isLocalization.prime_of_prime {R S : Type _} [CommRing R] [CommRing S] [Algebra R S]
     {M : Submonoid R} [IsLocalization M S] (hM : M ≤ nonZeroDivisors R) (p : R)
     (hp : Prime p) (hp₂ : ∃ (I : Ideal R), Disjoint (M : Set R) (I : Set R) ∧ p ∈ I) :
@@ -13,10 +16,12 @@ lemma isLocalization.prime_of_prime {R S : Type _} [CommRing R] [CommRing S] [Al
   exact (Ideal.span_singleton_prime (fun hp₃ => hp.ne_zero
     ((IsLocalization.to_map_eq_zero_iff S hM).1 hp₃))).1 hp'
 
+/-- Let R be a commutative ring and M be a multiplicatively closed set.
+If R is a UFD, then the localization of R by M is a UFD. -/
 lemma isLocalization.uniqueFactorizationMonoid_of_uniqueFactorizationMonoid {R S : Type _}
     [CommRing R] [CommRing S] [Algebra R S] [IsDomain R] {M : Submonoid R} [IsLocalization M S]
     (hM : M ≤ nonZeroDivisors R) [UniqueFactorizationMonoid R] :
-    @UniqueFactorizationMonoid _ (@IsDomain.toCancelCommMonoidWithZero S _
+    @UniqueFactorizationMonoid S (@IsDomain.toCancelCommMonoidWithZero S _
     (IsLocalization.isDomain_of_le_nonZeroDivisors _ hM)) := by
   haveI : IsDomain S := IsLocalization.isDomain_of_le_nonZeroDivisors _ hM
   refine' uniqueFactorizationMonoid_of_exists_prime _ (fun J hJzero hJprime => _)

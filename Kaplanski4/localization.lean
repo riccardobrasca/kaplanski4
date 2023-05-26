@@ -13,19 +13,17 @@ lemma is_localization.prime_of_prime {R S : Type _} [CommRing R] [CommRing S] [A
   exact (Ideal.span_singleton_prime (fun hp₃ => hp.ne_zero
     ((IsLocalization.to_map_eq_zero_iff S hM).1 hp₃))).1 hp'
 
-example {R S : Type _} [CommRing R] [CommRing S] [Algebra R S] [IsDomain R] {M : Submonoid R}
-  [IsLocalization M S] (hM : M ≤ nonZeroDivisors R) [UniqueFactorizationMonoid R] :
-  @UniqueFactorizationMonoid S (@IsDomain.toCancelCommMonoidWithZero S _
+lemma isLocalization.uniqueFactorizationMonoid_of_uniqueFactorizationMonoid {R S : Type _}
+    [CommRing R] [CommRing S] [Algebra R S] [IsDomain R] {M : Submonoid R} [IsLocalization M S]
+    (hM : M ≤ nonZeroDivisors R) [UniqueFactorizationMonoid R] :
+    @UniqueFactorizationMonoid _ (@IsDomain.toCancelCommMonoidWithZero S _
     (IsLocalization.isDomain_of_le_nonZeroDivisors _ hM)) := by
   haveI : IsDomain S := IsLocalization.isDomain_of_le_nonZeroDivisors _ hM
   refine' uniqueFactorizationMonoid_of_exists_prime _ (fun J hJzero hJprime => _)
-  set I := J.comap (algebraMap R S) with Idef
-  have hIprime : I.IsPrime := ((IsLocalization.isPrime_iff_isPrime_disjoint M S J).1 hJprime).1
-  have hI : I ≠ ⊥
-  { intro h
-    refine' hJzero _
-    rw [← IsLocalization.map_comap M S J, ← Idef, h, Ideal.map_bot] }
-  obtain ⟨p, hpI, hp⟩ := exists_prime_of_uniqueFactorizationMonoid _ hI hIprime
-  refine' ⟨algebraMap R S p, Ideal.mem_comap.mp hpI, _⟩
-  exact is_localization.prime_of_prime hM p hp ⟨I,
-    ⟨(((IsLocalization.isPrime_iff_isPrime_disjoint M S J).1 hJprime).2), hpI⟩⟩
+  let I := J.comap (algebraMap R S)
+  have hI := (IsLocalization.isPrime_iff_isPrime_disjoint M S J).1 hJprime
+  have hI₂ : I ≠ ⊥ :=
+    ((lt_iff_le_and_ne.1 (IsLocalization.bot_lt_comap_prime M S hM J hJzero)).2).symm
+  obtain ⟨p, hpI, hp⟩ := exists_prime_of_uniqueFactorizationMonoid _ hI₂ hI.1
+  exact ⟨algebraMap R S p, Ideal.mem_comap.mp hpI, is_localization.prime_of_prime hM p hp
+    ⟨I, hI.2, hpI⟩⟩

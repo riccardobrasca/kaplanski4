@@ -1,6 +1,4 @@
 import Mathlib.RingTheory.Nilpotent
-import Mathlib.Data.Polynomial.EraseLead
-import Mathlib.Data.Polynomial.Eval
 import Mathlib.Algebra.GeomSum
 import Mathlib.Data.Polynomial.Lifts
 import Mathlib.RingTheory.Ideal.Quotient
@@ -10,32 +8,24 @@ variable {R : Type _} [CommRing R]
 
 open Finset Polynomial BigOperators
 
-theorem is_unit_of_is_nilpotent_sub_one {r : R} (hnil : IsNilpotent r) :
-    IsUnit (r - 1) := by
+theorem isUnit_of_isNilpotent_sub_one {r : R} (hnil : IsNilpotent r) : IsUnit (r - 1) := by
   obtain ⟨n, hn⟩ := hnil
-  rw [isUnit_iff_exists_inv]
-  use -(∑ i in range n, r ^ i)
+  refine' isUnit_iff_exists_inv.2 ⟨-∑ i in range n, r ^ i, _⟩
   rw [mul_neg, mul_comm, geom_sum_mul, hn]
-  simp
+  ring
 
-theorem is_unit_of_is_unit_add_is_nilpotent {u r : R} (hu : IsUnit u) (hnil : IsNilpotent r) :
+theorem isUnit_of_isUnit_add_isNilpotent {u r : R} (hu : IsUnit u) (hnil : IsNilpotent r) :
     IsUnit (u + r) := by
   obtain ⟨v, hv⟩ := IsUnit.exists_right_inv hu
-  suffices : IsUnit (v * (u + r))
-  { exact isUnit_of_mul_isUnit_right this }
-  rw [mul_add, mul_comm v u, hv]
-  replace hnil : IsNilpotent (-v * r) := (nilradical R).mul_mem_left (-v) (mem_nilradical.2 hnil)
-  rw [← IsUnit.neg_iff, neg_add, add_comm, ← sub_eq_add_neg, ← neg_mul]
-  exact is_unit_of_is_nilpotent_sub_one hnil
+  suffices IsUnit (v * (u + r)) by
+    exact isUnit_of_mul_isUnit_right this
+  rw [mul_add, mul_comm, hv, ← IsUnit.neg_iff, neg_add, add_comm, ← sub_eq_add_neg, ← neg_mul]
+  exact isUnit_of_isNilpotent_sub_one (Ideal.mul_mem_left _ _ (mem_nilradical.2 hnil))
 
-namespace polynomial
+namespace Polynomial
 
-theorem is_nilpotent.C_mul_X_pow {r : R} (n : ℕ) (hnil : IsNilpotent r) :
-    IsNilpotent ((Polynomial.C r) * X ^ n) := by
-  have hCnil : IsNilpotent (Polynomial.C r) := IsNilpotent.map hnil Polynomial.C
-  apply Commute.isNilpotent_mul_left
-  { exact Commute.all (Polynomial.C r) (X ^ n) }
-  { assumption }
+theorem isNilpotent.C_mul_X_pow {r : R} (n : ℕ) (hnil : IsNilpotent r) :
+    IsNilpotent ((C r) * X ^ n) := (Commute.all _ _).isNilpotent_mul_left (hnil.map _)
 
 theorem isUnit_of_isUnit_of_isNilpotent {P : Polynomial R} (hunit : IsUnit (P.coeff 0))
     (hnil : ∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) : IsUnit P := by
@@ -47,9 +37,9 @@ theorem isUnit_of_isUnit_of_isNilpotent {P : Polynomial R} (hunit : IsUnit (P.co
   let P₁ := P.eraseLead
   suffices : IsUnit P₁
   { rw [← eraseLead_add_monomial_natDegree_leadingCoeff P]
-    apply is_unit_of_is_unit_add_is_nilpotent this _
+    apply isUnit_of_isUnit_add_isNilpotent this _
     rw [← C_mul_X_pow_eq_monomial]
-    apply is_nilpotent.C_mul_X_pow
+    apply isNilpotent.C_mul_X_pow
     apply hnil
     exact hdeg }
   have hdegk : P₁.natDegree < k
@@ -114,4 +104,4 @@ theorem is_unit_iff (P : Polynomial R) : IsUnit P ↔
   { intro H
     exact isUnit_of_isUnit_of_isNilpotent H.1 H.2 }
 
-end polynomial
+end Polynomial

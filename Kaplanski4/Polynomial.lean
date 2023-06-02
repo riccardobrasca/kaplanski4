@@ -7,9 +7,7 @@ import Mathlib.RingTheory.Ideal.Quotient
 
 variable {R : Type _} [CommRing R]
 
-open_locale polynomial big_operators
-
-open Finset
+open Finset Polynomial BigOperators
 
 theorem is_unit_of_is_nilpotent_sub_one {r : R} (hnil : IsNilpotent r) :
     IsUnit (r - 1) := by
@@ -81,12 +79,12 @@ theorem is_unit.coeff {P : Polynomial R} (hunit : IsUnit P) :
   obtain ⟨Q, hQ⟩ := IsUnit.exists_right_inv hunit
   constructor
   { let V := P * Q --let u := polynomial.constant_coeff (V),
-    have v1 : polynomial.constant_coeff (P * Q) = 1
+    have v1 : Polynomial.constantCoeff (P * Q) = 1 := by
       { rw [hQ]
-        rw [Polynomial.constant_coeff_apply]
+        rw [Polynomial.constantCoeff_apply]
         simp }
-    suffices : (polynomial.constant_coeff (P)) * (polynomial.constant_coeff (Q)) = 1
-      { exact is_unit_of_mul_eq_one (coeff P 0) (constant_coeff Q) this }
+    suffices (Polynomial.constantCoeff (P)) * (Polynomial.constantCoeff (Q)) = 1 by
+      { exact isUnit_of_mul_eq_one (P.coeff 0) (constantCoeff Q) this }
     simp at v1
     simp
     apply v1 }
@@ -94,15 +92,15 @@ theorem is_unit.coeff {P : Polynomial R} (hunit : IsUnit P) :
     rw [nilpotent_iff_mem_prime]
     intros I hI
     let f := Polynomial.mapRingHom (Ideal.Quotient.mk I)
-    have hPQ : (f P) * (f Q) = 1
-      { rw [← map_mul, hQ, map_one] }
-    replace hPQ := congr_arg degree hPQ
-    haveI : is_domain (R ⧸ I)
-      { rw [ideal.quotient.is_domain_iff_prime]
-        exact hI }
-    simp only [nat.with_bot.add_eq_zero_iff, degree_mul, degree_one] at hPQ
+    have hPQ : (f P) * (f Q) = (1 : Polynomial (R ⧸ I)) := by
+      rw [← map_mul, hQ, map_one]
+    replace hPQ := congr_arg Polynomial.degree hPQ
+    haveI : IsDomain (R ⧸ I) := by
+      rw [Ideal.Quotient.isDomain_iff_prime]
+      exact hI
+    simp only [Nat.WithBot.add_eq_zero_iff, degree_mul, degree_one] at hPQ
     have hcoeff : (f P).coeff n = 0
-    { apply polynomial.coeff_eq_zero_of_degree_lt
+    { apply Polynomial.coeff_eq_zero_of_degree_lt
       rw [hPQ.1, with_bot.coe_pos]
       exact ne.bot_lt hn }
     rw [coe_map_ring_hom, polynomial.coeff_map, ← ring_hom.mem_ker, ideal.mk_ker] at hcoeff

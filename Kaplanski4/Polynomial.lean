@@ -4,6 +4,7 @@ import Mathlib.Data.Polynomial.Eval
 import Mathlib.Algebra.GeomSum
 import Mathlib.Data.Polynomial.Lifts
 import Mathlib.RingTheory.Ideal.Quotient
+import Mathlib.RingTheory.Ideal.QuotientOperations
 
 variable {R : Type _} [CommRing R]
 
@@ -23,10 +24,8 @@ theorem is_unit_of_is_unit_add_is_nilpotent {u r : R} (hu : IsUnit u) (hnil : Is
   suffices : IsUnit (v * (u + r))
   { exact isUnit_of_mul_isUnit_right this }
   rw [mul_add, mul_comm v u, hv]
-  replace hnil : is_nilpotent (-v * r)
-  { rw [← mem_nilradical] at ⊢ hnil
-    exact (nilradical R).mul_mem_left (-v) hnil }
-  rw [← is_unit.neg_iff, neg_add, add_comm, ← sub_eq_add_neg, ← neg_mul]
+  replace hnil : IsNilpotent (-v * r) := (nilradical R).mul_mem_left (-v) (mem_nilradical.2 hnil)
+  rw [← IsUnit.neg_iff, neg_add, add_comm, ← sub_eq_add_neg, ← neg_mul]
   exact is_unit_of_is_nilpotent_sub_one hnil
 
 namespace polynomial
@@ -40,37 +39,37 @@ theorem is_nilpotent.C_mul_X_pow {r : R} (n : ℕ) (hnil : IsNilpotent r) :
 
 theorem isUnit_of_isUnit_of_isNilpotent {P : Polynomial R} (hunit : IsUnit (P.coeff 0))
     (hnil : ∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) : IsUnit P := by
-  induction h : P.nat_degree using nat.strong_induction_on with k hind generalizing P
-  by_cases hdeg : P.nat_degree = 0
-  { have hCunit : is_unit (C (P.coeff 0)) := is_unit.map C hunit
-    rw polynomial.eq_C_of_nat_degree_eq_zero hdeg
+  induction' h : P.natDegree using Nat.strong_induction_on with k hind generalizing P
+  by_cases hdeg : P.natDegree = 0
+  { have hCunit : IsUnit (C (P.coeff 0)) := IsUnit.map C hunit
+    rw [Polynomial.eq_C_of_natDegree_eq_zero hdeg]
     apply hCunit }
-  let P₁ := P.erase_lead
-  suffices : is_unit P₁
-  { rw [← erase_lead_add_monomial_nat_degree_leading_coeff P]
+  let P₁ := P.eraseLead
+  suffices : IsUnit P₁
+  { rw [← eraseLead_add_monomial_natDegree_leadingCoeff P]
     apply is_unit_of_is_unit_add_is_nilpotent this _
     rw [← C_mul_X_pow_eq_monomial]
     apply is_nilpotent.C_mul_X_pow
     apply hnil
     exact hdeg }
-  have hdegk : P₁.nat_degree < k
+  have hdegk : P₁.natDegree < k
   { rw [← h]
-    apply lt_of_le_of_lt (erase_lead_nat_degree_le P)
-    rw [← nat.pred_eq_sub_one]
-    exact nat.pred_lt hdeg }
-  have hP₁unit : is_unit (P₁.coeff 0)
-  { rw [erase_lead_coeff_of_ne]
+    apply lt_of_le_of_lt (eraseLead_natDegree_le P)
+    rw [← Nat.pred_eq_sub_one]
+    exact Nat.pred_lt hdeg }
+  have hP₁unit : IsUnit (P₁.coeff 0)
+  { rw [eraseLead_coeff_of_ne]
     { exact hunit }
     { intro h
       exact hdeg h.symm } }
-  have hP₁nilpotent : ∀ i ≠ 0, is_nilpotent (P₁.coeff i)
+  have hP₁nilpotent : ∀ i, i ≠ 0 → IsNilpotent (P₁.coeff i)
   { intros i hi
-    by_cases H : i ≤ P₁.nat_degree
-    { rw [erase_lead_coeff_of_ne]
+    by_cases H : i ≤ P₁.natDegree
+    { rw [eraseLead_coeff_of_ne]
       { exact hnil i hi }
       { linarith } }
-    { rw [coeff_eq_zero_of_nat_degree_lt]
-      { exact is_nilpotent.zero }
+    { rw [coeff_eq_zero_of_natDegree_lt]
+      { exact IsNilpotent.zero }
       { linarith } }}
   exact hind _ hdegk hP₁unit hP₁nilpotent rfl
 
@@ -78,7 +77,7 @@ theorem is_unit.coeff {P : Polynomial R} (hunit : IsUnit P) :
     IsUnit (P.coeff 0) ∧ (∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) := by
   obtain ⟨Q, hQ⟩ := IsUnit.exists_right_inv hunit
   constructor
-  { let V := P * Q --let u := polynomial.constant_coeff (V),
+  { let _ := P * Q --let u := polynomial.constant_coeff (V),
     have v1 : Polynomial.constantCoeff (P * Q) = 1 := by
       { rw [hQ]
         rw [Polynomial.constantCoeff_apply]
@@ -101,9 +100,10 @@ theorem is_unit.coeff {P : Polynomial R} (hunit : IsUnit P) :
     simp only [Nat.WithBot.add_eq_zero_iff, degree_mul, degree_one] at hPQ
     have hcoeff : (f P).coeff n = 0
     { apply Polynomial.coeff_eq_zero_of_degree_lt
-      rw [hPQ.1, with_bot.coe_pos]
-      exact ne.bot_lt hn }
-    rw [coe_map_ring_hom, polynomial.coeff_map, ← ring_hom.mem_ker, ideal.mk_ker] at hcoeff
+      rw [hPQ.1]
+      apply (@WithBot.coe_pos _ _ _ n).2
+      exact Ne.bot_lt hn }
+    rw [coe_mapRingHom, Polynomial.coeff_map, ← RingHom.mem_ker, Ideal.mk_ker] at hcoeff
     exact hcoeff }
 
 theorem is_unit_iff (P : Polynomial R) : IsUnit P ↔

@@ -79,12 +79,8 @@ theorem is_unit.coeff {P : Polynomial R} (hunit : IsUnit P) :
     rw [coe_mapRingHom, Polynomial.coeff_map, ← RingHom.mem_ker, Ideal.mk_ker] at hcoeff
     exact hcoeff }
 
-theorem is_unit_iff (P : Polynomial R) : IsUnit P ↔
-    IsUnit (P.coeff 0) ∧ (∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) := by
-  constructor
-  { intro hunit
-    exact is_unit.coeff hunit }
-  { intro H
-    exact isUnit_of_isUnit_of_isNilpotent H.1 H.2 }
+theorem isUnit_iff (P : Polynomial R) :
+    IsUnit P ↔ IsUnit (P.coeff 0) ∧ (∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) := ⟨is_unit.coeff,
+  fun H => isUnit_of_isUnit_of_isNilpotent H.1 H.2⟩
 
 end Polynomial

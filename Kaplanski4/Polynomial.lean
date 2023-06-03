@@ -31,37 +31,20 @@ theorem isUnit_of_isUnit_of_isNilpotent {P : Polynomial R} (hunit : IsUnit (P.co
     (hnil : ∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) : IsUnit P := by
   induction' h : P.natDegree using Nat.strong_induction_on with k hind generalizing P
   by_cases hdeg : P.natDegree = 0
-  { have hCunit : IsUnit (C (P.coeff 0)) := IsUnit.map C hunit
-    rw [Polynomial.eq_C_of_natDegree_eq_zero hdeg]
-    apply hCunit }
+  { rw [eq_C_of_natDegree_eq_zero hdeg]
+    exact hunit.map C }
   let P₁ := P.eraseLead
-  suffices : IsUnit P₁
-  { rw [← eraseLead_add_monomial_natDegree_leadingCoeff P]
-    apply isUnit_of_isUnit_add_isNilpotent this _
-    rw [← C_mul_X_pow_eq_monomial]
-    apply isNilpotent.C_mul_X_pow
-    apply hnil
-    exact hdeg }
-  have hdegk : P₁.natDegree < k
-  { rw [← h]
-    apply lt_of_le_of_lt (eraseLead_natDegree_le P)
-    rw [← Nat.pred_eq_sub_one]
-    exact Nat.pred_lt hdeg }
-  have hP₁unit : IsUnit (P₁.coeff 0)
-  { rw [eraseLead_coeff_of_ne]
-    { exact hunit }
-    { intro h
-      exact hdeg h.symm } }
-  have hP₁nilpotent : ∀ i, i ≠ 0 → IsNilpotent (P₁.coeff i)
-  { intros i hi
-    by_cases H : i ≤ P₁.natDegree
-    { rw [eraseLead_coeff_of_ne]
-      { exact hnil i hi }
-      { linarith } }
-    { rw [coeff_eq_zero_of_natDegree_lt]
-      { exact IsNilpotent.zero }
-      { linarith } }}
-  exact hind _ hdegk hP₁unit hP₁nilpotent rfl
+  suffices IsUnit P₁ by
+    rw [← eraseLead_add_monomial_natDegree_leadingCoeff P, ← C_mul_X_pow_eq_monomial]
+    exact isUnit_of_isUnit_add_isNilpotent this (isNilpotent.C_mul_X_pow _ (hnil _ hdeg))
+  have hdeg₂ := lt_of_le_of_lt P.eraseLead_natDegree_le (Nat.sub_lt
+    (Nat.pos_of_ne_zero hdeg) zero_lt_one)
+  refine' hind P₁.natDegree _ _ (fun i hi => _) rfl
+  · simp_rw [← h, hdeg₂]
+  · simp_rw [eraseLead_coeff_of_ne _ (Ne.symm hdeg), hunit]
+  · by_cases H : i ≤ P₁.natDegree
+    simp_rw [eraseLead_coeff_of_ne _ (ne_of_lt (lt_of_le_of_lt H hdeg₂)), hnil i hi]
+    simp_rw [coeff_eq_zero_of_natDegree_lt (lt_of_not_ge H), IsNilpotent.zero]
 
 theorem is_unit.coeff {P : Polynomial R} (hunit : IsUnit P) :
     IsUnit (P.coeff 0) ∧ (∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) := by

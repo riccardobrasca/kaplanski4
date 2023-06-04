@@ -27,6 +27,8 @@ namespace Polynomial
 theorem isNilpotent.C_mul_X_pow {r : R} (n : ℕ) (hnil : IsNilpotent r) :
     IsNilpotent ((C r) * X ^ n) := (Commute.all _ _).isNilpotent_mul_left (hnil.map _)
 
+/-- Let P be a polynomial over R. If its constant term is a unit and its other coefficients are
+nilpotent, then P is a unit. This is one implication of 'isUnit_iff'. -/
 theorem isUnit_of_isUnit_of_isNilpotent {P : Polynomial R} (hunit : IsUnit (P.coeff 0))
     (hnil : ∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) : IsUnit P := by
   induction' h : P.natDegree using Nat.strong_induction_on with k hind generalizing P
@@ -46,6 +48,8 @@ theorem isUnit_of_isUnit_of_isNilpotent {P : Polynomial R} (hunit : IsUnit (P.co
     simp_rw [eraseLead_coeff_of_ne _ (ne_of_lt (lt_of_le_of_lt H hdeg₂)), hnil i hi]
     simp_rw [coeff_eq_zero_of_natDegree_lt (lt_of_not_ge H), IsNilpotent.zero]
 
+/-- Let P be a polynomial over R. If P is a unit, then all its coefficients are nilpotent, except
+its constant term which is a unit. This is the other implication of 'isUnit_iff'. -/
 theorem isUnit.coeff {P : Polynomial R} (hunit : IsUnit P) :
     IsUnit (P.coeff 0) ∧ (∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) := by
   obtain ⟨Q, hQ⟩ := IsUnit.exists_right_inv hunit
@@ -66,6 +70,8 @@ theorem isUnit.coeff {P : Polynomial R} (hunit : IsUnit P) :
     rw [coe_mapRingHom, coeff_map, ← RingHom.mem_ker, Ideal.mk_ker] at hcoeff
     exact hcoeff }
 
+/-- Let P be a polynomial over R. P is a unit if and only if all its coefficients are nilpotent,
+except its constant term which is a unit. -/
 theorem isUnit_iff (P : Polynomial R) :
     IsUnit P ↔ IsUnit (P.coeff 0) ∧ (∀ i, i ≠ 0 → IsNilpotent (P.coeff i)) := ⟨isUnit.coeff,
   fun H => isUnit_of_isUnit_of_isNilpotent H.1 H.2⟩

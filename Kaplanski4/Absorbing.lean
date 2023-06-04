@@ -6,26 +6,26 @@ namespace Submonoid
 variable {M N : Type _} [CommMonoid M] [CommMonoid N]
 
 def Absorbing (S : Submonoid M) : Prop :=
-  ∀ x y, x * y ∈ S → ∃ z ∈ S, Associated x z ∧ ∃ z ∈ S, Associated y z
+  ∀ x y, x * y ∈ S → (∃ z ∈ S, Associated x z) ∧ ∃ z ∈ S, Associated y z
 
 section Basic
 
 theorem absorbing_def {S : Submonoid M} :
-    Absorbing S ↔ ∀ x y, x * y ∈ S → ∃ z ∈ S, Associated x z ∧ ∃ z ∈ S, Associated y z :=
+    Absorbing S ↔ ∀ x y, x * y ∈ S → (∃ z ∈ S, Associated x z) ∧ ∃ z ∈ S, Associated y z :=
   Iff.rfl
 
 variable (M) (N)
 
 theorem top_absorbing : (⊤ : Submonoid M).Absorbing := fun x y _ =>
-  ⟨x, Submonoid.mem_top _, Associated.refl _, y, Submonoid.mem_top _, Associated.refl _⟩
+  ⟨⟨x, Submonoid.mem_top _, Associated.refl _⟩, y, Submonoid.mem_top _, Associated.refl _⟩
 
 theorem bot_absorbing : (⊥ : Submonoid M).Absorbing := fun _ _ hxy =>
-  ⟨1, (⊥ : Submonoid M).one_mem, associated_one_of_mul_eq_one _ hxy, 1,
+  ⟨⟨1, (⊥ : Submonoid M).one_mem, associated_one_of_mul_eq_one _ hxy⟩, 1,
     (⊥ : Submonoid M).one_mem,
     associated_one_of_mul_eq_one _ (by rwa [mul_comm] at hxy)⟩
 
 theorem isUnit.submonoid_absorbing : (IsUnit.submonoid M).Absorbing := fun x y hxy =>
-  ⟨x, isUnit_of_mul_isUnit_left hxy, Associated.refl _, y, isUnit_of_mul_isUnit_right hxy,
+  ⟨⟨x, isUnit_of_mul_isUnit_left hxy, Associated.refl _⟩, y, isUnit_of_mul_isUnit_right hxy,
     Associated.refl _⟩
 
 theorem prod_associated_iff (x z : M × N) :
@@ -43,8 +43,8 @@ theorem prod.fst_absorbing_of_submonoid.prod_absorbing (s : Submonoid M) (t : Su
   rintro h x y hxy
   specialize h (x, 1) (y, 1)
   rw [Prod.mk_one_mul_mk_one] at h
-  rcases h (Submonoid.mem_prod.2 ⟨hxy, t.one_mem⟩) with ⟨a, ha, ha₂, ⟨b, hb, hb₂⟩⟩
-  exact ⟨a.1, (Submonoid.mem_prod.1 ha).1, ((prod_associated_iff _ _ _ _).1 ha₂).1, b.1,
+  rcases h (Submonoid.mem_prod.2 ⟨hxy, t.one_mem⟩) with ⟨⟨a, ha, ha₂⟩, b, hb, hb₂⟩
+  exact ⟨⟨a.1, (Submonoid.mem_prod.1 ha).1, ((prod_associated_iff _ _ _ _).1 ha₂).1⟩, b.1,
     (Submonoid.mem_prod.1 hb).1, ((prod_associated_iff _ _ _ _).1 hb₂).1⟩
 
 theorem prod.snd_absorbing_of_submonoid.prod_absorbing (s : Submonoid M) (t : Submonoid N) :
@@ -52,8 +52,8 @@ theorem prod.snd_absorbing_of_submonoid.prod_absorbing (s : Submonoid M) (t : Su
   rintro h x y hxy
   specialize h (1, x) (1, y)
   rw [Prod.one_mk_mul_one_mk] at h
-  rcases h (Submonoid.mem_prod.2 ⟨s.one_mem, hxy⟩) with ⟨a, ha, ha₂, ⟨b, hb, hb₂⟩⟩
-  exact ⟨a.2, (Submonoid.mem_prod.1 ha).2, ((prod_associated_iff _ _ _ _).1 ha₂).2, b.2,
+  rcases h (Submonoid.mem_prod.2 ⟨s.one_mem, hxy⟩) with ⟨⟨a, ha, ha₂⟩, b, hb, hb₂⟩
+  exact ⟨⟨a.2, (Submonoid.mem_prod.1 ha).2, ((prod_associated_iff _ _ _ _).1 ha₂).2⟩, b.2,
     (Submonoid.mem_prod.1 hb).2, ((prod_associated_iff _ _ _ _).1 hb₂).2⟩
 
 theorem prod.fst_snd_absorbing_of_submonoid.prod_absorbing (s : Submonoid M) (t : Submonoid N) :
@@ -64,9 +64,9 @@ theorem prod.fst_snd_absorbing_of_submonoid.prod_absorbing (s : Submonoid M) (t 
 theorem submonoid.prod_absorbing_of_prod.fst_snd_absorbing (s : Submonoid M) (t : Submonoid N) :
     Absorbing s ∧ Absorbing t → (s.prod t).Absorbing := by
   rintro ⟨hs, ht⟩ x y hxy
-  rcases hs x.1 y.1 hxy.1 with ⟨z, hz, hz₂, ⟨z', hz', hz'₂⟩⟩
-  rcases ht x.2 y.2 hxy.2 with ⟨w, hw, hw₂, ⟨w', hw', hw'₂⟩⟩
-  exact ⟨(z, w), Submonoid.mem_prod.2 ⟨hz, hw⟩, (prod_associated_iff _ _ _ _).2 ⟨hz₂, hw₂⟩, (z', w'),
+  rcases hs x.1 y.1 hxy.1 with ⟨⟨z, hz, hz₂⟩, z', hz', hz'₂⟩
+  rcases ht x.2 y.2 hxy.2 with ⟨⟨w, hw, hw₂⟩, w', hw', hw'₂⟩
+  exact ⟨⟨(z, w), Submonoid.mem_prod.2 ⟨hz, hw⟩, (prod_associated_iff _ _ _ _).2 ⟨hz₂, hw₂⟩⟩, (z', w'),
     Submonoid.mem_prod.2 ⟨hz', hw'⟩, (prod_associated_iff _ _ _ _).2 ⟨hz'₂, hw'₂⟩⟩
 
 theorem submonoid.prod_absorbing_iff (s : Submonoid M) (t : Submonoid N) :
@@ -81,8 +81,8 @@ theorem submonoid.powers_absorbing {R : Type _} [CommRing R] [IsDomain R] (p : R
   rw [← one_mul (p^m)] at hm
   rcases (mul_eq_mul_prime_pow hp hm.symm) with ⟨i, j, _, _, ⟨_, hbc, hx, hy⟩⟩
   rw [hx, hy]
-  refine' ⟨p^i, (Submonoid.mem_powers_iff _ _).2 ⟨i, rfl⟩,
-    (associated_isUnit_mul_left_iff (isUnit_of_mul_eq_one _ _ hbc.symm)).2 (Associated.refl (p^i)),
+  refine' ⟨⟨p^i, (Submonoid.mem_powers_iff _ _).2 ⟨i, rfl⟩,
+    (associated_isUnit_mul_left_iff (isUnit_of_mul_eq_one _ _ hbc.symm)).2 (Associated.refl (p^i))⟩,
       p^j, (Submonoid.mem_powers_iff _ _).2 ⟨j, rfl⟩, _⟩
   rw [mul_comm] at hbc
   exact (associated_isUnit_mul_left_iff (isUnit_of_mul_eq_one _ _ hbc.symm)).2
@@ -95,11 +95,11 @@ section CommMonoid
 theorem absorbing_iff_of_comm {S : Submonoid M} :
     Absorbing S ↔ ∀ x y, x * y ∈ S → ∃ z ∈ S, Associated x z := by
   refine' ⟨fun hS x y hxy => _, fun h x y hxy => _⟩
-  · rcases hS x y hxy with ⟨z, hz, hz₂, _⟩
+  · rcases hS x y hxy with ⟨⟨z, hz, hz₂⟩, _⟩
     exact ⟨z, hz, hz₂⟩
   · obtain ⟨z, hz, hz₂⟩ := h x y hxy
     rw [mul_comm] at hxy
-    exact ⟨z, hz, hz₂, h y x hxy⟩
+    exact ⟨⟨z, hz, hz₂⟩, h y x hxy⟩
 
 end CommMonoid
 

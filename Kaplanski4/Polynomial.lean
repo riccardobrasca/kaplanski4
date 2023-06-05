@@ -46,10 +46,13 @@ theorem isUnit_of_isUnit_of_isNilpotent {P : Polynomial R} (hunit : IsUnit (P.co
   by_cases hdeg : P.natDegree = 0
   { rw [eq_C_of_natDegree_eq_zero hdeg]
     exact hunit.map C }
-  let P₁ := P.eraseLead
+  set P₁ := P.eraseLead with hP₁
   suffices IsUnit P₁ by
     rw [← eraseLead_add_monomial_natDegree_leadingCoeff P, ← C_mul_X_pow_eq_monomial]
-    exact isUnit_of_isUnit_add_isNilpotent this (isNilpotent.C_mul_X_pow _ (hnil _ hdeg))
+    obtain ⟨Q, hQ⟩ := this
+    rw [← hP₁, ← hQ]
+    refine' isUnit_of_isUnit_add_isNilpotent (isNilpotent.C_mul_X_pow _ (hnil _ hdeg))
+      ((Commute.all _ _).mul_left (Commute.all _ _))
   have hdeg₂ := lt_of_le_of_lt P.eraseLead_natDegree_le (Nat.sub_lt
     (Nat.pos_of_ne_zero hdeg) zero_lt_one)
   refine' hind P₁.natDegree _ _ (fun i hi => _) rfl

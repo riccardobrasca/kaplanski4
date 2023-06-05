@@ -28,10 +28,15 @@ theorem isUnit_of_isUnit_add_isNilpotent [Ring R] {r : R} {u : Rˣ} (hnil : IsNi
 
 namespace Polynomial
 
-variable [CommRing R]
+theorem isNilpotent.C_mul_X_pow [Semiring R] {r : R} (n : ℕ) (hnil : IsNilpotent r) :
+    IsNilpotent ((C r) * X ^ n) := by
+  refine' Commute.isNilpotent_mul_left _ _
+  · exact (Polynomial.commute_X_pow _ _).symm
+  · obtain ⟨m, hm⟩ := hnil
+    refine' ⟨m, _⟩
+    rw [← Polynomial.C_pow, hm, Polynomial.C_0]
 
-theorem isNilpotent.C_mul_X_pow {r : R} (n : ℕ) (hnil : IsNilpotent r) :
-    IsNilpotent ((C r) * X ^ n) := (Commute.all _ _).isNilpotent_mul_left (hnil.map _)
+variable [CommRing R]
 
 /-- Let P be a polynomial over R. If its constant term is a unit and its other coefficients are
 nilpotent, then P is a unit. This is one implication of 'isUnit_iff'. -/

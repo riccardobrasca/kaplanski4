@@ -16,9 +16,7 @@ theorem isUnit_of_isNilpotent_sub_one [Ring R] {r : R} (hnil : IsNilpotent r) : 
   · rw [neg_mul, geom_sum_mul, hn]
     simp
 
-variable [Ring R]
-
-theorem isUnit_of_isUnit_add_isNilpotent {r : R} {u : Rˣ} (hnil : IsNilpotent r)
+theorem isUnit_of_isUnit_add_isNilpotent [Ring R] {r : R} {u : Rˣ} (hnil : IsNilpotent r)
   (hru : Commute r (↑u⁻¹ : R)) : IsUnit (u + r) := by
   rw [← Units.isUnit_mul_units _ u⁻¹, add_mul, Units.mul_inv, ← IsUnit.neg_iff, add_comm, neg_add,
     ← sub_eq_add_neg]
@@ -29,6 +27,8 @@ theorem isUnit_of_isUnit_add_isNilpotent {r : R} {u : Rˣ} (hnil : IsNilpotent r
   simp
 
 namespace Polynomial
+
+variable [CommRing R]
 
 theorem isNilpotent.C_mul_X_pow {r : R} (n : ℕ) (hnil : IsNilpotent r) :
     IsNilpotent ((C r) * X ^ n) := (Commute.all _ _).isNilpotent_mul_left (hnil.map _)

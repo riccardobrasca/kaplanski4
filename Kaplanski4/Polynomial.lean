@@ -4,15 +4,19 @@ import Mathlib.Data.Polynomial.Lifts
 import Mathlib.RingTheory.Ideal.Quotient
 import Mathlib.RingTheory.Ideal.QuotientOperations
 
-variable {R : Type _} [CommRing R]
+variable {R : Type _}
 
 open Finset Polynomial BigOperators
 
-theorem isUnit_of_isNilpotent_sub_one {r : R} (hnil : IsNilpotent r) : IsUnit (r - 1) := by
+theorem isUnit_of_isNilpotent_sub_one [Ring R] {r : R} (hnil : IsNilpotent r) : IsUnit (r - 1) := by
   obtain ⟨n, hn⟩ := hnil
-  refine' isUnit_iff_exists_inv.2 ⟨-∑ i in range n, r ^ i, _⟩
-  rw [mul_neg, mul_comm, geom_sum_mul, hn]
-  ring
+  refine' ⟨⟨r - 1, -∑ i in range n, r ^ i, _, _⟩, rfl⟩
+  · rw [mul_neg, mul_geom_sum, hn]
+    simp
+  · rw [neg_mul, geom_sum_mul, hn]
+    simp
+
+variable [CommRing R]
 
 theorem isUnit_of_isUnit_add_isNilpotent {u r : R} (hu : IsUnit u) (hnil : IsNilpotent r) :
     IsUnit (u + r) := by

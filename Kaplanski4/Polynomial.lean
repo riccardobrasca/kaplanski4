@@ -16,15 +16,17 @@ theorem isUnit_of_isNilpotent_sub_one [Ring R] {r : R} (hnil : IsNilpotent r) : 
   · rw [neg_mul, geom_sum_mul, hn]
     simp
 
-variable [CommRing R]
+variable [Ring R]
 
-theorem isUnit_of_isUnit_add_isNilpotent {u r : R} (hu : IsUnit u) (hnil : IsNilpotent r) :
-    IsUnit (u + r) := by
-  obtain ⟨v, hv⟩ := IsUnit.exists_right_inv hu
-  suffices IsUnit (v * (u + r)) by
-    exact isUnit_of_mul_isUnit_right this
-  rw [mul_add, mul_comm, hv, ← IsUnit.neg_iff, neg_add, add_comm, ← sub_eq_add_neg, ← neg_mul]
-  exact isUnit_of_isNilpotent_sub_one (Ideal.mul_mem_left _ _ (mem_nilradical.2 hnil))
+theorem isUnit_of_isUnit_add_isNilpotent {r : R} {u : Rˣ} (hnil : IsNilpotent r)
+  (hru : Commute r (↑u⁻¹ : R)) : IsUnit (u + r) := by
+  rw [← Units.isUnit_mul_units _ u⁻¹, add_mul, Units.mul_inv, ← IsUnit.neg_iff, add_comm, neg_add,
+    ← sub_eq_add_neg]
+  apply isUnit_of_isNilpotent_sub_one
+  obtain ⟨n, hn⟩ := hnil
+  refine' ⟨n, _⟩
+  rw [neg_pow, hru.mul_pow, hn]
+  simp
 
 namespace Polynomial
 

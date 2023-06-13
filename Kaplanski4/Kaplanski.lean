@@ -1,23 +1,23 @@
 import Mathlib.RingTheory.PrincipalIdealDomain
 import Kaplanski4.Absorbing
 
-variable {R : Type _} [CommRing R] (S : Submonoid R)
+variable {R : Type _}
 
 /-- The set of ideals of the ring R which do not intersect the submonoid S -/
-def Kaplansky.set :=
+def Kaplansky.set [Semiring R] (S : Submonoid R) :=
   { I : Ideal R | (I : Set R) ∩ S = ∅ }
 
-theorem Kaplansky.set_def {P : Ideal R} : P ∈ Kaplansky.set S ↔ (P : Set R) ∩ S = ∅ :=
-  Iff.rfl
+theorem Kaplansky.set_def [Semiring R] (S : Submonoid R) {P : Ideal R} :
+    P ∈ Kaplansky.set S ↔ (P : Set R) ∩ S = ∅ := Iff.rfl
 
-variable {P : Ideal R} {S} (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P)
+--variable {P : Ideal R} {S} (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P)
 
 section Existence
 
 /-- The proof of 'exists_maximal_ideal' uses Zorn's lemma so the following theorem checks that
 every chain of 'Kaplansky.set S' has an upper bound. -/
-theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ Kaplansky.set S)
-    (hC₂ : IsChain (· ≤ ·) C) (I : Ideal R) (hI : I ∈ C) :
+theorem hypothesis_zorn_lemma [Semiring R] {S : Submonoid R} (C : Set (Ideal R))
+    (hC : C ⊆ Kaplansky.set S) (hC₂ : IsChain (· ≤ ·) C) {I : Ideal R} (hI : I ∈ C) :
     ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
   refine' ⟨supₛ C, _, fun z hz => le_supₛ hz⟩
   rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
@@ -45,18 +45,22 @@ section Basic
 
 /-- If an ideal P satisfies the condition P ∩ S = ∅, then P ≠ R
 (this is used to prove that P is prime). -/
-theorem ideal_neq_top : P ≠ ⊤ := fun h =>
-  ((Set.disjoint_left.1 (Set.disjoint_iff_inter_eq_empty.2 ((Kaplansky.set_def _).1 hP)))
-      (P.eq_top_iff_one.1 h)) S.one_mem
+theorem ideal_neq_top [Semiring R] {S : Submonoid R} {P : Ideal R}
+    (hP : P ∈ Kaplansky.set S) : P ≠ ⊤ :=
+  fun h => ((Set.disjoint_left.1 (Set.disjoint_iff_inter_eq_empty.2 ((Kaplansky.set_def _).1 hP)))
+    (P.eq_top_iff_one.1 h)) S.one_mem
 
-theorem exists_mem_inter {I : Ideal R} (h : P < I) : ∃ x : R, x ∈ (I : Set R) ∩ S :=
+theorem exists_mem_inter [Semiring R] {S : Submonoid R} {P : Ideal R} {I : Ideal R}
+    (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) (h : P < I) : ∃ x : R, x ∈ (I : Set R) ∩ S :=
   Set.inter_nonempty.1
     (Set.nonempty_iff_ne_empty.2 fun h₂ =>
       (lt_iff_le_and_ne.1 h).2 ((hmax I) h₂ (lt_iff_le_and_ne.1 h).1).symm)
 
 /-- This is checked to prove that an ideal P which is maximal with respect to
 the condition P ∩ S = ∅ is also prime. -/
-theorem mem_or_mem_of_mul_mem (x y : R) : x * y ∈ P → x ∈ P ∨ y ∈ P := by
+theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Submonoid R} (x y : R)
+    (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) :
+    x * y ∈ P → x ∈ P ∨ y ∈ P := by
   intro hxy
   by_contra h
   push_neg  at h
@@ -83,11 +87,14 @@ theorem mem_or_mem_of_mul_mem (x y : R) : x * y ∈ P → x ∈ P ∨ y ∈ P :=
     Set.eq_empty_iff_forall_not_mem.1 hP (s * t) ⟨h₃ (Ideal.mul_mem_mul hs ht), S.mul_mem hs' ht'⟩
 
 /-- If an ideal P is maximal with respect to the condition P ∩ S = ∅, then it is prime. -/
-theorem isPrime_of_maximal : P.IsPrime :=
-  ⟨ideal_neq_top hP, fun h => mem_or_mem_of_mul_mem hP hmax _ _ h⟩
+theorem isPrime_of_maximal [CommSemiring R] {P : Ideal R} {S : Submonoid R}
+    (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) : P.IsPrime :=
+  ⟨ideal_neq_top hP, fun h => mem_or_mem_of_mul_mem _ _ hP hmax h⟩
 
 end Basic
 
+variable [CommRing R] {P : Ideal R} {S : Submonoid R} (hP : P ∈ Kaplansky.set S)
+(hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P)
 section Kaplansky
 
 theorem exists_mem_of_mem {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :

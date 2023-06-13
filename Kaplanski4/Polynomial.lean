@@ -4,28 +4,39 @@ import Mathlib.Data.Polynomial.Lifts
 import Mathlib.RingTheory.Ideal.Quotient
 import Mathlib.RingTheory.Ideal.QuotientOperations
 
-variable {R : Type _} [CommRing R]
+variable {R : Type _}
 
 open Finset Polynomial BigOperators
 
-theorem isUnit_of_isNilpotent_sub_one {r : R} (hnil : IsNilpotent r) : IsUnit (r - 1) := by
+theorem isUnit_of_isNilpotent_sub_one [Ring R] {r : R} (hnil : IsNilpotent r) : IsUnit (r - 1) := by
   obtain ⟨n, hn⟩ := hnil
-  refine' isUnit_iff_exists_inv.2 ⟨-∑ i in range n, r ^ i, _⟩
-  rw [mul_neg, mul_comm, geom_sum_mul, hn]
-  ring
+  refine' ⟨⟨r - 1, -∑ i in range n, r ^ i, _, _⟩, rfl⟩
+  · rw [mul_neg, mul_geom_sum, hn]
+    simp
+  · rw [neg_mul, geom_sum_mul, hn]
+    simp
 
-theorem isUnit_of_isUnit_add_isNilpotent {u r : R} (hu : IsUnit u) (hnil : IsNilpotent r) :
-    IsUnit (u + r) := by
-  obtain ⟨v, hv⟩ := IsUnit.exists_right_inv hu
-  suffices IsUnit (v * (u + r)) by
-    exact isUnit_of_mul_isUnit_right this
-  rw [mul_add, mul_comm, hv, ← IsUnit.neg_iff, neg_add, add_comm, ← sub_eq_add_neg, ← neg_mul]
-  exact isUnit_of_isNilpotent_sub_one (Ideal.mul_mem_left _ _ (mem_nilradical.2 hnil))
+theorem isUnit_of_isUnit_add_isNilpotent [Ring R] {r : R} {u : Rˣ} (hnil : IsNilpotent r)
+  (hru : Commute r (↑u⁻¹ : R)) : IsUnit (u + r) := by
+  rw [← Units.isUnit_mul_units _ u⁻¹, add_mul, Units.mul_inv, ← IsUnit.neg_iff, add_comm, neg_add,
+    ← sub_eq_add_neg]
+  apply isUnit_of_isNilpotent_sub_one
+  obtain ⟨n, hn⟩ := hnil
+  refine' ⟨n, _⟩
+  rw [neg_pow, hru.mul_pow, hn]
+  simp
 
 namespace Polynomial
 
-theorem isNilpotent.C_mul_X_pow {r : R} (n : ℕ) (hnil : IsNilpotent r) :
-    IsNilpotent ((C r) * X ^ n) := (Commute.all _ _).isNilpotent_mul_left (hnil.map _)
+theorem isNilpotent.C_mul_X_pow [Semiring R] {r : R} (n : ℕ) (hnil : IsNilpotent r) :
+    IsNilpotent ((C r) * X ^ n) := by
+  refine' Commute.isNilpotent_mul_left _ _
+  · exact (Polynomial.commute_X_pow _ _).symm
+  · obtain ⟨m, hm⟩ := hnil
+    refine' ⟨m, _⟩
+    rw [← Polynomial.C_pow, hm, Polynomial.C_0]
+
+variable [CommRing R]
 
 /-- Let P be a polynomial over R. If its constant term is a unit and its other coefficients are
 nilpotent, then P is a unit. This is one implication of 'isUnit_iff'. -/
@@ -35,10 +46,13 @@ theorem isUnit_of_isUnit_of_isNilpotent {P : Polynomial R} (hunit : IsUnit (P.co
   by_cases hdeg : P.natDegree = 0
   { rw [eq_C_of_natDegree_eq_zero hdeg]
     exact hunit.map C }
-  let P₁ := P.eraseLead
+  set P₁ := P.eraseLead with hP₁
   suffices IsUnit P₁ by
     rw [← eraseLead_add_monomial_natDegree_leadingCoeff P, ← C_mul_X_pow_eq_monomial]
-    exact isUnit_of_isUnit_add_isNilpotent this (isNilpotent.C_mul_X_pow _ (hnil _ hdeg))
+    obtain ⟨Q, hQ⟩ := this
+    rw [← hP₁, ← hQ]
+    refine' isUnit_of_isUnit_add_isNilpotent (isNilpotent.C_mul_X_pow _ (hnil _ hdeg))
+      ((Commute.all _ _).mul_left (Commute.all _ _))
   have hdeg₂ := lt_of_le_of_lt P.eraseLead_natDegree_le (Nat.sub_lt
     (Nat.pos_of_ne_zero hdeg) zero_lt_one)
   refine' hind P₁.natDegree _ _ (fun i hi => _) rfl

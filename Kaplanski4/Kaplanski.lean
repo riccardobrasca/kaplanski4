@@ -93,11 +93,9 @@ theorem isPrime_of_maximal [CommSemiring R] {P : Ideal R} {S : Submonoid R}
 
 end Basic
 
-variable [CommRing R] {P : Ideal R} {S : Submonoid R} (hP : P ∈ Kaplansky.set S)
-(hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P)
 section Kaplansky
 
-theorem exists_mem_of_mem {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
+theorem exists_mem_of_mem [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
     Multiset.prod s ∈ I → ∃ (p : R) (_ : p ∈ s), p ∈ I := by
   intro hs
   by_contra h
@@ -112,7 +110,7 @@ theorem exists_mem_of_mem {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
   exact fun h₂ => (Ideal.isPrime_iff.1 hI).1 (I.eq_top_iff_one.2 h₂)
   exact hs₃ hs
 
-theorem mem_iff {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
+theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
     s.prod ∈ I ↔ ∃ (p : R) (_ : p ∈ s), p ∈ I := by
   classical
     constructor
@@ -121,6 +119,9 @@ theorem mem_iff {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
       rcases hs with ⟨p, ⟨hs₂, hs₃⟩⟩
       rw [← Multiset.prod_erase hs₂]
       exact Ideal.mul_mem_right _ _ hs₃
+
+variable [CommRing R] {P : Ideal R} {S : Submonoid R} (hP : P ∈ Kaplansky.set S)
+(hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P)
 
 variable (R)
 

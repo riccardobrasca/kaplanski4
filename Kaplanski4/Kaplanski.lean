@@ -10,8 +10,6 @@ def Kaplansky.set [Semiring R] (S : Submonoid R) :=
 theorem Kaplansky.set_def [Semiring R] (S : Submonoid R) {P : Ideal R} :
     P ∈ Kaplansky.set S ↔ (P : Set R) ∩ S = ∅ := Iff.rfl
 
---variable {P : Ideal R} {S} (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P)
-
 section Existence
 
 /-- The proof of 'exists_maximal_ideal' uses Zorn's lemma so the following theorem checks that
@@ -56,6 +54,7 @@ theorem exists_mem_inter [Semiring R] {S : Submonoid R} {P : Ideal R} {I : Ideal
     (Set.nonempty_iff_ne_empty.2 fun h₂ =>
       (lt_iff_le_and_ne.1 h).2 ((hmax I) h₂ (lt_iff_le_and_ne.1 h).1).symm)
 
+-- Semiring?
 /-- This is checked to prove that an ideal P which is maximal with respect to
 the condition P ∩ S = ∅ is also prime. -/
 theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Submonoid R} (x y : R)
@@ -86,6 +85,7 @@ theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Submonoid R} (
   exact
     Set.eq_empty_iff_forall_not_mem.1 hP (s * t) ⟨h₃ (Ideal.mul_mem_mul hs ht), S.mul_mem hs' ht'⟩
 
+-- Semiring?
 /-- If an ideal P is maximal with respect to the condition P ∩ S = ∅, then it is prime. -/
 theorem isPrime_of_maximal [CommSemiring R] {P : Ideal R} {S : Submonoid R}
     (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) : P.IsPrime :=
@@ -95,6 +95,7 @@ end Basic
 
 section Kaplansky
 
+-- Semiring?
 theorem exists_mem_of_mem [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
     Multiset.prod s ∈ I → ∃ (p : R) (_ : p ∈ s), p ∈ I := by
   intro hs
@@ -110,6 +111,7 @@ theorem exists_mem_of_mem [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : 
   exact fun h₂ => (Ideal.isPrime_iff.1 hI).1 (I.eq_top_iff_one.2 h₂)
   exact hs₃ hs
 
+-- Semiring?
 theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
     s.prod ∈ I ↔ ∃ (p : R) (_ : p ∈ s), p ∈ I := by
   classical
@@ -120,18 +122,12 @@ theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime)
       rw [← Multiset.prod_erase hs₂]
       exact Ideal.mul_mem_right _ _ hs₃
 
-variable [CommRing R] {P : Ideal R} {S : Submonoid R} (hP : P ∈ Kaplansky.set S)
-(hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P)
-
-variable (R)
-
-variable [IsDomain R]
-
 /-- One implication of Kaplansky's criterion (if an integral domain R is a UFD, then every nonzero
 prime ideal contains a prime element). -/
-theorem exists_prime_of_uniqueFactorizationMonoid [UniqueFactorizationMonoid R] {I : Ideal R}
+theorem exists_prime_of_uniqueFactorizationMonoid [Semiring R] [CancelCommMonoidWithZero R]
+  [UniqueFactorizationMonoid R] {I : Ideal R}
   (hI : I ≠ ⊥) (hI₂ : I.IsPrime) : ∃ x ∈ I, Prime x := by
-  classical
+    classical
     have ha : ∃ a : R, a ∈ I ∧ a ≠ 0 := Submodule.exists_mem_ne_zero_of_ne_bot hI
     rcases ha with ⟨a, ⟨ha₁, ha₂⟩⟩
     cases' UniqueFactorizationMonoid.factors_prod ha₂ with u ha₃
@@ -143,47 +139,48 @@ theorem exists_prime_of_uniqueFactorizationMonoid [UniqueFactorizationMonoid R] 
       exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ u.isUnit)
 
 /-- The set of prime elements. -/
-def primes :=
+def primes (R : Type) [CommMonoidWithZero R] :=
   { r : R | Prime r }
 
 /-- Let a, b ∈ R. If ab can be written as a product of prime elements, then a can be written as
 a product of a unit and prime elements. The same goes for b. -/
-theorem submonoid.closure_primes_absorbing : (Submonoid.closure (primes R)).Absorbing := by
+theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
+    (Submonoid.closure (primes R)).Absorbing := by
   classical
-    rw [Submonoid.absorbing_iff_of_comm]
-    intro a b hab
-    obtain ⟨m, hm⟩ := Submonoid.exists_multiset_of_mem_closure hab
-    revert hm a b
-    refine' Multiset.strongInductionOn m _
-    rintro s hind b a _ ⟨hprime, hprod⟩
-    rcases s.empty_or_exists_mem with (hempty | ⟨i, hi⟩)
-    · simp [hempty] at hprod
-      exact ⟨1, (Submonoid.closure (primes R)).one_mem, associated_one_of_mul_eq_one _ hprod.symm⟩
-    rw [← Multiset.prod_erase hi] at hprod
-    rcases(hprime i hi).dvd_or_dvd ⟨(s.erase i).prod, hprod.symm⟩ with (⟨x, hxb⟩ | ⟨x, hxa⟩)
-    · suffices ∃ z ∈ Submonoid.closure (primes R), Associated x z by
-        obtain ⟨z, hz, hzx⟩ := this
-        refine' ⟨z * i, Submonoid.mul_mem _ hz (Submonoid.subset_closure (hprime _ hi)), _⟩
-        rw [hxb, mul_comm z i]
-        exact Associated.mul_left i hzx
-      rw [hxb, mul_assoc] at hprod
-      replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime _ hi).ne_zero hprod
-      have hxamem : x * a ∈ Submonoid.closure (primes R) := by
-        rw [← hprod]
-        exact Submonoid.multiset_prod_mem _ _ fun x hx =>
-          Submonoid.subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
-      exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hxamem
-        ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
-    · rw [hxa, ← mul_assoc, mul_comm b i, mul_assoc] at hprod
-      replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime i hi).ne_zero hprod
-      have hbxmem : b * x ∈ Submonoid.closure (primes R) := by
-        rw [← hprod]
-        exact Submonoid.multiset_prod_mem _ _ fun x hx =>
-          Submonoid.subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
-      exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hbxmem
-        ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
+  rw [Submonoid.absorbing_iff_of_comm]
+  intro a b hab
+  obtain ⟨m, hm⟩ := Submonoid.exists_multiset_of_mem_closure hab
+  revert hm a b
+  refine' Multiset.strongInductionOn m _
+  rintro s hind b a _ ⟨hprime, hprod⟩
+  rcases s.empty_or_exists_mem with (hempty | ⟨i, hi⟩)
+  · simp [hempty] at hprod
+    exact ⟨1, (Submonoid.closure (primes R)).one_mem, associated_one_of_mul_eq_one _ hprod.symm⟩
+  rw [← Multiset.prod_erase hi] at hprod
+  rcases(hprime i hi).dvd_or_dvd ⟨(s.erase i).prod, hprod.symm⟩ with (⟨x, hxb⟩ | ⟨x, hxa⟩)
+  · suffices ∃ z ∈ Submonoid.closure (primes R), Associated x z by
+      obtain ⟨z, hz, hzx⟩ := this
+      refine' ⟨z * i, Submonoid.mul_mem _ hz (Submonoid.subset_closure (hprime _ hi)), _⟩
+      rw [hxb, mul_comm z i]
+      exact Associated.mul_left i hzx
+    rw [hxb, mul_assoc] at hprod
+    replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime _ hi).ne_zero hprod
+    have hxamem : x * a ∈ Submonoid.closure (primes R) := by
+      rw [← hprod]
+      exact Submonoid.multiset_prod_mem _ _ fun x hx =>
+        Submonoid.subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
+    exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hxamem
+      ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
+  · rw [hxa, ← mul_assoc, mul_comm b i, mul_assoc] at hprod
+    replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime i hi).ne_zero hprod
+    have hbxmem : b * x ∈ Submonoid.closure (primes R) := by
+      rw [← hprod]
+      exact Submonoid.multiset_prod_mem _ _ fun x hx =>
+        Submonoid.subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
+    exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hbxmem
+      ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
 
-theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0)
+theorem ideal.span_ne_mem_kaplanski.set [Semiring R] {a : R} (ha : a ≠ 0)
     (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
     Ideal.span {a} ∉ Kaplansky.set (Submonoid.closure (primes R)) := by
   have hzero : 0 ∉ Submonoid.closure (primes R) := by
@@ -202,7 +199,7 @@ theorem ideal.span_ne_mem_kaplanski.set {a : R} (ha : a ≠ 0)
 
 /-- The other implication of Kaplansky's criterion (if every nonzero prime ideal of
 an integral domain R contains a prime element, then R is a UFD). -/
-theorem uniqueFactorizationMonoid_of_exists_prime
+theorem uniqueFactorizationMonoid_of_exists_prime [Semiring R] [CancelCommMonoidWithZero R]
     (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
     UniqueFactorizationMonoid R := by
   refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
@@ -219,12 +216,12 @@ theorem uniqueFactorizationMonoid_of_exists_prime
 
 /-- Kaplansky's criterion (an integral domain R is a UFD if and only if every nonzero prime ideal
 contains a prime element). -/
-theorem uniqueFactorizationMonoid_iff :
+theorem uniqueFactorizationMonoid_iff [Semiring R] [CancelCommMonoidWithZero R] :
   UniqueFactorizationMonoid R ↔ ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x := by
   constructor
   intro u I hI hI₂
-  exact exists_prime_of_uniqueFactorizationMonoid R hI hI₂
+  exact exists_prime_of_uniqueFactorizationMonoid hI hI₂
   intro H
-  exact uniqueFactorizationMonoid_of_exists_prime _ H
+  exact uniqueFactorizationMonoid_of_exists_prime H
 
 end Kaplansky

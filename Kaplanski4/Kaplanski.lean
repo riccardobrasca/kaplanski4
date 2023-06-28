@@ -54,7 +54,6 @@ theorem exists_mem_inter [Semiring R] {S : Submonoid R} {P : Ideal R} {I : Ideal
     (Set.nonempty_iff_ne_empty.2 fun h₂ =>
       (lt_iff_le_and_ne.1 h).2 ((hmax I) h₂ (lt_iff_le_and_ne.1 h).1).symm)
 
--- Semiring?
 /-- This is checked to prove that an ideal P which is maximal with respect to
 the condition P ∩ S = ∅ is also prime. -/
 theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Submonoid R} (x y : R)
@@ -85,7 +84,6 @@ theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Submonoid R} (
   exact
     Set.eq_empty_iff_forall_not_mem.1 hP (s * t) ⟨h₃ (Ideal.mul_mem_mul hs ht), S.mul_mem hs' ht'⟩
 
--- Semiring?
 /-- If an ideal P is maximal with respect to the condition P ∩ S = ∅, then it is prime. -/
 theorem isPrime_of_maximal [CommSemiring R] {P : Ideal R} {S : Submonoid R}
     (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) : P.IsPrime :=
@@ -203,7 +201,7 @@ theorem uniqueFactorizationMonoid_of_exists_prime [Semiring R] [CancelCommMonoid
     (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
     UniqueFactorizationMonoid R := by
   refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
-  have ha₂ := ideal.span_ne_mem_kaplanski.set _ ha H
+  have ha₂ := ideal.span_ne_mem_kaplanski.set ha H
   rw [Kaplansky.set_def, ← Ne.def] at ha₂
   rcases Set.nonempty_iff_ne_empty.2 ha₂ with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb

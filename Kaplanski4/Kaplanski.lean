@@ -93,21 +93,28 @@ end Basic
 
 section Kaplansky
 
--- Semiring?
-theorem exists_mem_of_mem [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
-    Multiset.prod s ∈ I → ∃ (p : R) (_ : p ∈ s), p ∈ I := by
+theorem exists_mem_of_mem [Semiring R] {I : Ideal R} (s : List R) (hI : I.IsPrime) :
+    s.prod ∈ I → ∃ (p : R) (_ : p ∈ s), p ∈ I := by
   intro hs
   by_contra h
   push_neg at h
-  have hs₃ : s.prod ∉ I
-  refine' Multiset.prod_induction _ _ _ _ h
-  · rintro a b ha hb
-    by_contra h
-    cases' (Ideal.isPrime_iff.1 hI).2 h with hI₂ hI₃
-    exact ha hI₂
-    exact hb hI₃
-  exact fun h₂ => (Ideal.isPrime_iff.1 hI).1 (I.eq_top_iff_one.2 h₂)
-  exact hs₃ hs
+  have hs₃ : s.prod ∉ I := by
+    induction' s with a l hl
+    · rw [List.prod_nil]
+      intro hI₂
+      rw [← Ideal.eq_top_iff_one] at hI₂
+      exact Ideal.IsPrime.ne_top hI hI₂
+    · rw [List.prod_cons] at hs
+      have hprime := Ideal.IsPrime.mem_or_mem hI hs
+      cases' hprime with ha hl₂
+      · have ha₂ := h a (List.mem_cons_self a l)
+        contradiction
+      · rw [List.prod_cons]
+        intro h₂
+        have _ := Ideal.IsPrime.mem_or_mem hI h₂
+        specialize hl hl₂ (fun p hp => h p (List.mem_cons_of_mem a hp))
+        contradiction
+  contradiction
 
 -- Semiring?
 theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
@@ -122,7 +129,7 @@ theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime)
 
 /-- One implication of Kaplansky's criterion (if an integral domain R is a UFD, then every nonzero
 prime ideal contains a prime element). -/
-theorem exists_prime_of_uniqueFactorizationMonoid [Semiring R] [CancelCommMonoidWithZero R]
+theorem exists_prime_of_uniqueFactorizationMonoid [CommRing R] [IsDomain R]
   [UniqueFactorizationMonoid R] {I : Ideal R}
   (hI : I ≠ ⊥) (hI₂ : I.IsPrime) : ∃ x ∈ I, Prime x := by
     classical

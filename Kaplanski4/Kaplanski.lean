@@ -116,12 +116,14 @@ theorem exists_mem_of_mem [Semiring R] {I : Ideal R} (s : List R) (hI : I.IsPrim
         contradiction
   contradiction
 
--- Semiring?
 theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
     s.prod ∈ I ↔ ∃ (p : R) (_ : p ∈ s), p ∈ I := by
   classical
     constructor
-    exact exists_mem_of_mem s hI
+    intro hs
+    rw [← Multiset.prod_toList] at hs
+    rcases (exists_mem_of_mem s.toList hI hs) with ⟨p, ⟨hs₂, hpI⟩⟩
+    exact ⟨p, Multiset.mem_toList.1 hs₂, hpI⟩
     · intro hs
       rcases hs with ⟨p, ⟨hs₂, hs₃⟩⟩
       rw [← Multiset.prod_erase hs₂]

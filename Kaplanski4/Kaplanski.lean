@@ -129,13 +129,22 @@ theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime)
       rw [← Multiset.prod_erase hs₂]
       exact Ideal.mul_mem_right _ _ hs₃
 
+example [Semiring R] [CancelCommMonoidWithZero R] :
+    CommMonoidWithZero.toZero (M₀ := R) = AddMonoid.toZero := by rfl
+
 /-- One implication of Kaplansky's criterion (if an integral domain R is a UFD, then every nonzero
 prime ideal contains a prime element). -/
-theorem exists_prime_of_uniqueFactorizationMonoid [CommRing R] [IsDomain R]
+theorem exists_prime_of_uniqueFactorizationMonoid [Semiring R] [CancelCommMonoidWithZero R]
   [UniqueFactorizationMonoid R] {I : Ideal R}
   (hI : I ≠ ⊥) (hI₂ : I.IsPrime) : ∃ x ∈ I, Prime x := by
     classical
-    have ha : ∃ a : R, a ∈ I ∧ a ≠ 0 := Submodule.exists_mem_ne_zero_of_ne_bot hI
+    have := Submodule.exists_mem_ne_zero_of_ne_bot hI
+    have ha : ∃ a : R, a ∈ I ∧ a ≠ 0 := by
+      rcases this with ⟨b, hb, hb₂⟩
+      use b
+      constructor
+      exact hb
+      exact hb₂ --Submodule.exists_mem_ne_zero_of_ne_bot hI
     rcases ha with ⟨a, ⟨ha₁, ha₂⟩⟩
     cases' UniqueFactorizationMonoid.factors_prod ha₂ with u ha₃
     rw [← ha₃] at ha₁

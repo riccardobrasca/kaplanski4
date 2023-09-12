@@ -1,34 +1,27 @@
 import Mathlib.GroupTheory.Submonoid.Membership
 import Mathlib.RingTheory.Prime
 
+variable {M N : Type _}
+
 namespace Subsemigroup
 
-variable {M N : Type _} [CommMonoid M] [CommMonoid N]
-
-def ProdProperty (S : Subsemigroup M) : Prop :=
+/-- We define a property for subsemigroups. We then give examples of subsemigroups
+(in the namespace Subsemigroup) and more precisely, of submonoids (in the namespace Submonoid)
+which satisfy this property. -/
+def ProdProperty [Monoid M] (S : Subsemigroup M) : Prop :=
   ∀ x y, x * y ∈ S → (∃ z ∈ S, Associated x z) ∧ ∃ z ∈ S, Associated y z
 
 section Basic
 
-theorem prodProperty_def {S : Subsemigroup M} :
+theorem prodProperty_def [Monoid M] {S : Subsemigroup M} :
     S.ProdProperty ↔ ∀ x y, x * y ∈ S → (∃ z ∈ S, Associated x z) ∧ ∃ z ∈ S, Associated y z :=
   Iff.rfl
 
-theorem top_prodProperty : (⊤ : Subsemigroup M).ProdProperty :=
+theorem top_prodProperty [Monoid M] : (⊤ : Subsemigroup M).ProdProperty :=
   fun x y _ =>
   ⟨⟨x, Subsemigroup.mem_top _, Associated.refl _⟩, y, Subsemigroup.mem_top _, Associated.refl _⟩
 
-theorem bot_prodProperty : (⊥ : Submonoid M).ProdProperty :=
-  fun _ _ hxy =>
-  ⟨⟨1, (⊥ : Submonoid M).one_mem, associated_one_of_mul_eq_one _ hxy⟩, 1,
-    (⊥ : Submonoid M).one_mem,
-    associated_one_of_mul_eq_one _ (by rwa [mul_comm] at hxy)⟩
-
-theorem isUnit.submonoid_absorbing : (IsUnit.submonoid M).Absorbing := fun x y hxy =>
-  ⟨⟨x, isUnit_of_mul_isUnit_left hxy, Associated.refl _⟩, y, isUnit_of_mul_isUnit_right hxy,
-    Associated.refl _⟩
-
-theorem prod_associated_iff (x z : M × N) :
+theorem prod_associated_iff [CommMonoid M] [CommMonoid N] (x z : M × N) :
     Associated x z ↔ Associated x.1 z.1 ∧ Associated x.2 z.2 := by
   refine' ⟨fun ⟨u, hu⟩ => _, fun ⟨⟨u₁, hu₁⟩, ⟨u₂, hu₂⟩⟩ => ⟨MulEquiv.prodUnits.invFun (u₁, u₂),
     Prod.eq_iff_fst_eq_snd_eq.2 ⟨hu₁, hu₂⟩⟩⟩
@@ -38,44 +31,44 @@ theorem prod_associated_iff (x z : M × N) :
   exact ⟨(associated_mul_isUnit_right_iff (isUnit_of_mul_eq_one _ _ hb.1)).2 (Associated.refl _),
     (associated_mul_isUnit_right_iff (isUnit_of_mul_eq_one _ _ hb.2)).2 (Associated.refl _)⟩
 
-theorem prod.fst_absorbing_of_submonoid.prod_absorbing (s : Subsemigroup M) (t : Submonoid N) :
-    (s.prod t.toSubsemigroup).Absorbing → Absorbing s := by
+theorem fst_prodProperty [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+    (s.prod t).ProdProperty → s.ProdProperty := by
   rintro h x y hxy
   specialize h (x, 1) (y, 1)
   rw [Prod.mk_one_mul_mk_one] at h
   rcases h (Submonoid.mem_prod.2 ⟨hxy, t.one_mem⟩) with ⟨⟨a, ha, ha₂⟩, b, hb, hb₂⟩
-  exact ⟨⟨a.1, (Submonoid.mem_prod.1 ha).1, ((prod_associated_iff _ _ _ _).1 ha₂).1⟩, b.1,
-    (Submonoid.mem_prod.1 hb).1, ((prod_associated_iff _ _ _ _).1 hb₂).1⟩
+  exact ⟨⟨a.1, (Submonoid.mem_prod.1 ha).1, ((prod_associated_iff _ _).1 ha₂).1⟩, b.1,
+    (Submonoid.mem_prod.1 hb).1, ((prod_associated_iff _ _).1 hb₂).1⟩
 
-theorem prod.snd_absorbing_of_submonoid.prod_absorbing (s : Submonoid M) (t : Subsemigroup N) :
-    (s.toSubsemigroup.prod t).Absorbing → Absorbing t := by
+theorem snd_prodProperty [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+    (s.prod t).ProdProperty → t.ProdProperty := by
   rintro h x y hxy
   specialize h (1, x) (1, y)
   rw [Prod.one_mk_mul_one_mk] at h
   rcases h (Submonoid.mem_prod.2 ⟨s.one_mem, hxy⟩) with ⟨⟨a, ha, ha₂⟩, b, hb, hb₂⟩
-  exact ⟨⟨a.2, (Submonoid.mem_prod.1 ha).2, ((prod_associated_iff _ _ _ _).1 ha₂).2⟩, b.2,
-    (Submonoid.mem_prod.1 hb).2, ((prod_associated_iff _ _ _ _).1 hb₂).2⟩
+  exact ⟨⟨a.2, (Submonoid.mem_prod.1 ha).2, ((prod_associated_iff _ _).1 ha₂).2⟩, b.2,
+    (Submonoid.mem_prod.1 hb).2, ((prod_associated_iff _ _).1 hb₂).2⟩
 
-theorem prod.fst_snd_absorbing_of_submonoid.prod_absorbing (s : Subsemigroup M) (t : Subsemigroup N) :
-    (s.prod t).Absorbing → Absorbing s ∧ Absorbing t := fun h =>
-  ⟨prod.fst_absorbing_of_submonoid.prod_absorbing _ _ s t h,
-    prod.snd_absorbing_of_submonoid.prod_absorbing _ _ s t h⟩
+theorem prodProperty_of_prod [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+    (s.prod t).ProdProperty → s.ProdProperty ∧ t.ProdProperty := fun h =>
+  ⟨fst_prodProperty s t h, snd_prodProperty s t h⟩
 
-theorem submonoid.prod_absorbing_of_prod.fst_snd_absorbing (s : Subsemigroup M) (t : Subsemigroup N) :
-    Absorbing s ∧ Absorbing t → (s.prod t).Absorbing := by
+theorem prod_of_prodProperty [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+    s.ProdProperty ∧ t.ProdProperty → (s.prod t).ProdProperty := by
   rintro ⟨hs, ht⟩ x y hxy
   rcases hs x.1 y.1 hxy.1 with ⟨⟨z, hz, hz₂⟩, z', hz', hz'₂⟩
   rcases ht x.2 y.2 hxy.2 with ⟨⟨w, hw, hw₂⟩, w', hw', hw'₂⟩
-  exact ⟨⟨(z, w), Submonoid.mem_prod.2 ⟨hz, hw⟩, (prod_associated_iff _ _ _ _).2 ⟨hz₂, hw₂⟩⟩, (z', w'),
-    Submonoid.mem_prod.2 ⟨hz', hw'⟩, (prod_associated_iff _ _ _ _).2 ⟨hz'₂, hw'₂⟩⟩
+  exact ⟨⟨(z, w), Submonoid.mem_prod.2 ⟨hz, hw⟩, (prod_associated_iff _ _).2 ⟨hz₂, hw₂⟩⟩, (z', w'),
+    Submonoid.mem_prod.2 ⟨hz', hw'⟩, (prod_associated_iff _ _).2 ⟨hz'₂, hw'₂⟩⟩
 
-theorem submonoid.prod_absorbing_iff (s : Subsemigroup M) (t : Subsemigroup N) :
-    (s.prod t).Absorbing ↔ Absorbing s ∧ Absorbing t :=
-  ⟨prod.fst_snd_absorbing_of_submonoid.prod_absorbing _ _ s t,
-    submonoid.prod_absorbing_of_prod.fst_snd_absorbing _ _ s t⟩
+/-- Given two subsemigroups `s` and `t` of semigroups `M`, `N` respectively,
+`s × t` satisfies the property if and only if `s` and `t` both satisfy it. -/
+theorem prod_prodProperty_iff [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+    (s.prod t).ProdProperty ↔ s.ProdProperty ∧ t.ProdProperty :=
+  ⟨prodProperty_of_prod s t, prod_of_prodProperty s t⟩
 
 theorem submonoid.powers_absorbing {R : Type _} [CommRing R] [IsDomain R] (p : R) (hp : Prime p) :
-    (Submonoid.powers p).Absorbing := by
+    (Submonoid.powers p).ProdProperty := by
   rintro x y hxy
   cases' ((Submonoid.mem_powers_iff _ _).1 hxy) with m hm
   rw [← one_mul (p^m)] at hm
@@ -92,15 +85,29 @@ end Basic
 
 section CommMonoid
 
-theorem absorbing_iff_of_comm {S : Subsemigroup M} :
-    Absorbing S ↔ ∀ x y, x * y ∈ S → ∃ z ∈ S, Associated x z := by
-  refine' ⟨fun hS x y hxy => _, fun h x y hxy => _⟩
-  · rcases hS x y hxy with ⟨⟨z, hz, hz₂⟩, _⟩
-    exact ⟨z, hz, hz₂⟩
-  · obtain ⟨z, hz, hz₂⟩ := h x y hxy
-    rw [mul_comm] at hxy
-    exact ⟨⟨z, hz, hz₂⟩, h y x hxy⟩
+theorem prodProperty_iff_of_comm [CommMonoid M] {S : Subsemigroup M} :
+    S.ProdProperty ↔ ∀ x y, x * y ∈ S → ∃ z ∈ S, Associated x z :=
+  ⟨fun hS x y hxy => (hS x y hxy).1, fun h x y hxy => ⟨h x y hxy, h y x (by rwa [mul_comm] at hxy)⟩⟩
 
 end CommMonoid
 
 end Subsemigroup
+
+namespace Submonoid
+
+section Basic
+
+theorem bot_prodProperty [CommMonoid M] : (⊥ : Submonoid M).ProdProperty :=
+  fun _ _ hxy =>
+  ⟨⟨_, (⊥ : Submonoid M).one_mem, associated_one_of_mul_eq_one _ hxy⟩, _, (⊥ : Submonoid M).one_mem,
+  associated_one_of_mul_eq_one _ (by rwa [mul_comm] at hxy)⟩
+
+/-- The submonoid consisting of the units of a monoid satisfies the property. -/
+theorem IsUnit.submonoid_prodProperty [CommMonoid M] : (IsUnit.submonoid M).ProdProperty :=
+  fun _ _ hxy =>
+  ⟨⟨_, isUnit_of_mul_isUnit_left hxy, Associated.refl _⟩, _, isUnit_of_mul_isUnit_right hxy,
+  Associated.refl _⟩
+
+end Basic
+
+end Submonoid

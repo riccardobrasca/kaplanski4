@@ -21,17 +21,18 @@ theorem top_prodProperty [Monoid M] : (⊤ : Subsemigroup M).ProdProperty :=
   fun x y _ =>
   ⟨⟨x, Subsemigroup.mem_top _, Associated.refl _⟩, y, Subsemigroup.mem_top _, Associated.refl _⟩
 
-theorem prod_associated_iff [CommMonoid M] [CommMonoid N] (x z : M × N) :
+/-- The proof of `prod_prodProperty_iff` uses several results. The first one is below. -/
+theorem prod_associated_iff [Monoid M] [Monoid N] (x z : M × N) :
     Associated x z ↔ Associated x.1 z.1 ∧ Associated x.2 z.2 := by
-  refine' ⟨fun ⟨u, hu⟩ => _, fun ⟨⟨u₁, hu₁⟩, ⟨u₂, hu₂⟩⟩ => ⟨MulEquiv.prodUnits.invFun (u₁, u₂),
-    Prod.eq_iff_fst_eq_snd_eq.2 ⟨hu₁, hu₂⟩⟩⟩
-  cases' u.isUnit.exists_right_inv with b hb
-  rw [Prod.mk_eq_one] at hb
-  rw [← hu]
-  exact ⟨(associated_mul_isUnit_right_iff (isUnit_of_mul_eq_one _ _ hb.1)).2 (Associated.refl _),
-    (associated_mul_isUnit_right_iff (isUnit_of_mul_eq_one _ _ hb.2)).2 (Associated.refl _)⟩
+  refine' ⟨fun h => ⟨_, _⟩,
+  fun ⟨⟨u₁, hu₁⟩, ⟨u₂, hu₂⟩⟩ =>
+  ⟨MulEquiv.prodUnits.invFun (u₁, u₂), Prod.eq_iff_fst_eq_snd_eq.2 ⟨hu₁, hu₂⟩⟩⟩
+  · cases' h with u hu
+    exact ⟨(MulEquiv.prodUnits.toFun u).1, (Prod.eq_iff_fst_eq_snd_eq.1 hu).1⟩
+  · cases' h with u hu
+    exact ⟨(MulEquiv.prodUnits.toFun u).2, (Prod.eq_iff_fst_eq_snd_eq.1 hu).2⟩
 
-theorem fst_prodProperty [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+theorem fst_prodProperty [Monoid M] [Monoid N] (s : Submonoid M) (t : Submonoid N) :
     (s.prod t).ProdProperty → s.ProdProperty := by
   rintro h x y hxy
   specialize h (x, 1) (y, 1)
@@ -40,7 +41,7 @@ theorem fst_prodProperty [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Su
   exact ⟨⟨a.1, (Submonoid.mem_prod.1 ha).1, ((prod_associated_iff _ _).1 ha₂).1⟩, b.1,
     (Submonoid.mem_prod.1 hb).1, ((prod_associated_iff _ _).1 hb₂).1⟩
 
-theorem snd_prodProperty [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+theorem snd_prodProperty [Monoid M] [Monoid N] (s : Submonoid M) (t : Submonoid N) :
     (s.prod t).ProdProperty → t.ProdProperty := by
   rintro h x y hxy
   specialize h (1, x) (1, y)
@@ -49,11 +50,11 @@ theorem snd_prodProperty [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Su
   exact ⟨⟨a.2, (Submonoid.mem_prod.1 ha).2, ((prod_associated_iff _ _).1 ha₂).2⟩, b.2,
     (Submonoid.mem_prod.1 hb).2, ((prod_associated_iff _ _).1 hb₂).2⟩
 
-theorem prodProperty_of_prod [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+theorem prodProperty_of_prod [Monoid M] [Monoid N] (s : Submonoid M) (t : Submonoid N) :
     (s.prod t).ProdProperty → s.ProdProperty ∧ t.ProdProperty := fun h =>
   ⟨fst_prodProperty s t h, snd_prodProperty s t h⟩
 
-theorem prod_of_prodProperty [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+theorem prod_of_prodProperty [Monoid M] [Monoid N] (s : Submonoid M) (t : Submonoid N) :
     s.ProdProperty ∧ t.ProdProperty → (s.prod t).ProdProperty := by
   rintro ⟨hs, ht⟩ x y hxy
   rcases hs x.1 y.1 hxy.1 with ⟨⟨z, hz, hz₂⟩, z', hz', hz'₂⟩
@@ -63,7 +64,7 @@ theorem prod_of_prodProperty [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t 
 
 /-- Given two subsemigroups `s` and `t` of semigroups `M`, `N` respectively,
 `s × t` satisfies the property if and only if `s` and `t` both satisfy it. -/
-theorem prod_prodProperty_iff [CommMonoid M] [CommMonoid N] (s : Submonoid M) (t : Submonoid N) :
+theorem prod_prodProperty_iff [Monoid M] [Monoid N] (s : Submonoid M) (t : Submonoid N) :
     (s.prod t).ProdProperty ↔ s.ProdProperty ∧ t.ProdProperty :=
   ⟨prodProperty_of_prod s t, prod_of_prodProperty s t⟩
 

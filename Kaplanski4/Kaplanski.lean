@@ -1,5 +1,5 @@
 import Mathlib.RingTheory.PrincipalIdealDomain
-import Kaplanski4.Absorbing
+--import Kaplanski4.Absorbing
 
 variable {R : Type*}
 
@@ -155,9 +155,9 @@ def primes (R : Type*) [CommMonoidWithZero R] :=
 /-- Let a, b ∈ R. If ab can be written as a product of prime elements, then a can be written as
 a product of a unit and prime elements. The same goes for b. -/
 theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
-    (Submonoid.closure (primes R)).ProdProperty := by
+    ∀ x y, x * y ∈ (Submonoid.closure (primes R)) →
+      ∃ z ∈ (Submonoid.closure (primes R)), Associated x z := by
   classical
-  rw [Subsemigroup.prodProperty_iff_of_comm]
   intro a b hab
   obtain ⟨m, hm⟩ := Submonoid.exists_multiset_of_mem_closure hab
   revert hm a b
@@ -218,8 +218,7 @@ theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
   rcases Set.nonempty_iff_ne_empty.2 ha₂ with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
   rw [← hb, mul_comm] at hx₂
-  obtain ⟨z, hzmem, hass⟩ := Subsemigroup.prodProperty_iff_of_comm.1
-    submonoid.closure_primes_absorbing _ _ hx₂
+  obtain ⟨z, hzmem, hass⟩ := submonoid.closure_primes_absorbing _ _ hx₂
   obtain ⟨m, hprime, hprod⟩ := Submonoid.exists_multiset_of_mem_closure hzmem
   refine' ⟨m, hprime, _⟩
   rwa [hprod, Associated.comm]

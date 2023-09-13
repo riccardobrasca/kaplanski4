@@ -17,10 +17,10 @@ every chain of 'Kaplansky.set S' has an upper bound. -/
 theorem hypothesis_zorn_lemma [Semiring R] {S : Submonoid R} (C : Set (Ideal R))
     (hC : C ⊆ Kaplansky.set S) (hC₂ : IsChain (· ≤ ·) C) {I : Ideal R} (hI : I ∈ C) :
     ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
-  refine' ⟨supₛ C, _, fun z hz => le_supₛ hz⟩
+  refine' ⟨sSup C, _, fun z hz => le_sSup hz⟩
   rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
   rintro x hx
-  rcases (Submodule.mem_supₛ_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
+  rcases (Submodule.mem_sSup_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
   have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
   exact hx₂ (hC hJ₁)
 
@@ -128,9 +128,6 @@ theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime)
       rcases hs with ⟨p, ⟨hs₂, hs₃⟩⟩
       rw [← Multiset.prod_erase hs₂]
       exact Ideal.mul_mem_right _ _ hs₃
-
-example [Semiring R] [CancelCommMonoidWithZero R] :
-    CommMonoidWithZero.toZero (M₀ := R) = AddMonoid.toZero := by rfl
 
 /-- One implication of Kaplansky's criterion (if an integral domain R is a UFD, then every nonzero
 prime ideal contains a prime element). -/

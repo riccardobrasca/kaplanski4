@@ -1,5 +1,6 @@
 import Mathlib.GroupTheory.Submonoid.Membership
 import Mathlib.RingTheory.Prime
+import Mathlib.Algebra.Ring.Regular
 
 variable {M N : Type _}
 
@@ -42,7 +43,7 @@ theorem prod_of_prodProperty [Monoid M] [Monoid N] {s : Subsemigroup M} {t : Sub
   exact ⟨⟨(z, w), Subsemigroup.mem_prod.2 ⟨hz, hw⟩, prod_associated_iff.2 ⟨hz₂, hw₂⟩⟩,
   (z', w'), Subsemigroup.mem_prod.2 ⟨hz', hw'⟩, prod_associated_iff.2 ⟨hz'₂, hw'₂⟩⟩
 
-theorem submonoid.powers_absorbing {R : Type _} [CommRing R] [IsDomain R] (p : R) (hp : Prime p) :
+theorem submonoid.powers_absorbing {R : Type*} [CommRing R] [IsDomain R] (p : R) (hp : Prime p) :
     (Submonoid.powers p).ProdProperty := by
   rintro x y hxy
   cases' ((Submonoid.mem_powers_iff _ _).1 hxy) with m hm

@@ -1,7 +1,7 @@
 import Mathlib.RingTheory.PrincipalIdealDomain
 import Kaplanski4.Absorbing
 
-variable {R : Type _}
+variable {R : Type*}
 
 /-- The set of ideals of the ring R which do not intersect the submonoid S -/
 def Kaplansky.set [Semiring R] (S : Submonoid R) :=
@@ -26,7 +26,7 @@ theorem hypothesis_zorn_lemma [Semiring R] {S : Submonoid R} (C : Set (Ideal R))
 
 /-- The existence of a maximal element of 'Kaplansky.set S'
 (which we will use to prove Kaplansky's criterion). -/
-theorem exists_maximal_ideal (hS : 0 ∉ S) :
+theorem exists_maximal_ideal [Semiring R] {S : Submonoid R} (hS : 0 ∉ S) :
     ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
   have hx : 0 ∈ Kaplansky.set S := by
     rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
@@ -131,7 +131,7 @@ theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime)
 
 /-- One implication of Kaplansky's criterion (if an integral domain R is a UFD, then every nonzero
 prime ideal contains a prime element). -/
-theorem exists_prime_of_uniqueFactorizationMonoid [Semiring R] [CancelCommMonoidWithZero R]
+theorem exists_prime_of_uniqueFactorizationMonoid [CommSemiring R] [IsDomain R]
   [UniqueFactorizationMonoid R] {I : Ideal R}
   (hI : I ≠ ⊥) (hI₂ : I.IsPrime) : ∃ x ∈ I, Prime x := by
     classical
@@ -139,9 +139,6 @@ theorem exists_prime_of_uniqueFactorizationMonoid [Semiring R] [CancelCommMonoid
     have ha : ∃ a : R, a ∈ I ∧ a ≠ 0 := by
       rcases this with ⟨b, hb, hb₂⟩
       use b
-      constructor
-      exact hb
-      exact hb₂ --Submodule.exists_mem_ne_zero_of_ne_bot hI
     rcases ha with ⟨a, ⟨ha₁, ha₂⟩⟩
     cases' UniqueFactorizationMonoid.factors_prod ha₂ with u ha₃
     rw [← ha₃] at ha₁
@@ -152,15 +149,15 @@ theorem exists_prime_of_uniqueFactorizationMonoid [Semiring R] [CancelCommMonoid
       exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ u.isUnit)
 
 /-- The set of prime elements. -/
-def primes (R : Type) [CommMonoidWithZero R] :=
+def primes (R : Type*) [CommMonoidWithZero R] :=
   { r : R | Prime r }
 
 /-- Let a, b ∈ R. If ab can be written as a product of prime elements, then a can be written as
 a product of a unit and prime elements. The same goes for b. -/
 theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
-    (Submonoid.closure (primes R)).Absorbing := by
+    (Submonoid.closure (primes R)).ProdProperty := by
   classical
-  rw [Submonoid.absorbing_iff_of_comm]
+  rw [Subsemigroup.prodProperty_iff_of_comm]
   intro a b hab
   obtain ⟨m, hm⟩ := Submonoid.exists_multiset_of_mem_closure hab
   revert hm a b
@@ -193,7 +190,7 @@ theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
     exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hbxmem
       ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
 
-theorem ideal.span_ne_mem_kaplanski.set [Semiring R] {a : R} (ha : a ≠ 0)
+theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (ha : a ≠ 0)
     (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
     Ideal.span {a} ∉ Kaplansky.set (Submonoid.closure (primes R)) := by
   have hzero : 0 ∉ Submonoid.closure (primes R) := by
@@ -212,7 +209,7 @@ theorem ideal.span_ne_mem_kaplanski.set [Semiring R] {a : R} (ha : a ≠ 0)
 
 /-- The other implication of Kaplansky's criterion (if every nonzero prime ideal of
 an integral domain R contains a prime element, then R is a UFD). -/
-theorem uniqueFactorizationMonoid_of_exists_prime [Semiring R] [CancelCommMonoidWithZero R]
+theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
     (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
     UniqueFactorizationMonoid R := by
   refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
@@ -221,15 +218,15 @@ theorem uniqueFactorizationMonoid_of_exists_prime [Semiring R] [CancelCommMonoid
   rcases Set.nonempty_iff_ne_empty.2 ha₂ with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
   rw [← hb, mul_comm] at hx₂
-  obtain ⟨z, hzmem, hass⟩ := Submonoid.absorbing_iff_of_comm.1
-    (submonoid.closure_primes_absorbing _) _ _ hx₂
+  obtain ⟨z, hzmem, hass⟩ := Subsemigroup.prodProperty_iff_of_comm.1
+    submonoid.closure_primes_absorbing _ _ hx₂
   obtain ⟨m, hprime, hprod⟩ := Submonoid.exists_multiset_of_mem_closure hzmem
   refine' ⟨m, hprime, _⟩
   rwa [hprod, Associated.comm]
 
 /-- Kaplansky's criterion (an integral domain R is a UFD if and only if every nonzero prime ideal
 contains a prime element). -/
-theorem uniqueFactorizationMonoid_iff [Semiring R] [CancelCommMonoidWithZero R] :
+theorem uniqueFactorizationMonoid_iff [CommSemiring R] [IsDomain R] :
   UniqueFactorizationMonoid R ↔ ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x := by
   constructor
   intro u I hI hI₂

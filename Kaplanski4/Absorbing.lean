@@ -22,16 +22,11 @@ theorem top_prodProperty [Monoid M] : (⊤ : Subsemigroup M).ProdProperty :=
   fun x y _ =>
   ⟨⟨x, Subsemigroup.mem_top _, Associated.refl _⟩, y, Subsemigroup.mem_top _, Associated.refl _⟩
 
-/-- The proof of `prod_prodProperty_iff` uses several results. The first one is below. -/
-theorem prod_associated_iff [Monoid M] [Monoid N] {x z : M × N} :
+theorem Prod.associated_iff {M N : Type*} [Monoid M] [Monoid N] {x z : M × N} :
     Associated x z ↔ Associated x.1 z.1 ∧ Associated x.2 z.2 := by
-  refine' ⟨fun h => ⟨_, _⟩,
-  fun ⟨⟨u₁, hu₁⟩, ⟨u₂, hu₂⟩⟩ =>
-  ⟨MulEquiv.prodUnits.invFun (u₁, u₂), Prod.eq_iff_fst_eq_snd_eq.2 ⟨hu₁, hu₂⟩⟩⟩
-  · cases' h with u hu
-    exact ⟨(MulEquiv.prodUnits.toFun u).1, (Prod.eq_iff_fst_eq_snd_eq.1 hu).1⟩
-  · cases' h with u hu
-    exact ⟨(MulEquiv.prodUnits.toFun u).2, (Prod.eq_iff_fst_eq_snd_eq.1 hu).2⟩
+  refine' ⟨fun ⟨u, hu⟩ => ⟨⟨(MulEquiv.prodUnits.toFun u).1, (Prod.eq_iff_fst_eq_snd_eq.1 hu).1⟩,
+    ⟨(MulEquiv.prodUnits.toFun u).2, (Prod.eq_iff_fst_eq_snd_eq.1 hu).2⟩⟩, fun ⟨⟨u₁, h₁⟩, ⟨u₂, h₂⟩⟩ =>
+      ⟨MulEquiv.prodUnits.invFun (u₁, u₂), Prod.eq_iff_fst_eq_snd_eq.2 ⟨h₁, h₂⟩⟩⟩
 
 /-- Given two subsemigroups `s`, `t` of semigroups `M`, `N` respectively,
 if `s` and `t` both satisfy the property, then `s × t` satisfies it as well. -/
@@ -40,8 +35,8 @@ theorem prod_of_prodProperty [Monoid M] [Monoid N] {s : Subsemigroup M} {t : Sub
   rintro ⟨hs, ht⟩ x y hxy
   obtain ⟨⟨z, hz, hz₂⟩, z', hz', hz'₂⟩ := hs x.1 y.1 hxy.1
   obtain ⟨⟨w, hw, hw₂⟩, w', hw', hw'₂⟩ := ht x.2 y.2 hxy.2
-  exact ⟨⟨(z, w), Subsemigroup.mem_prod.2 ⟨hz, hw⟩, prod_associated_iff.2 ⟨hz₂, hw₂⟩⟩,
-  (z', w'), Subsemigroup.mem_prod.2 ⟨hz', hw'⟩, prod_associated_iff.2 ⟨hz'₂, hw'₂⟩⟩
+  exact ⟨⟨(z, w), Subsemigroup.mem_prod.2 ⟨hz, hw⟩, Prod.associated_iff.2 ⟨hz₂, hw₂⟩⟩,
+  (z', w'), Subsemigroup.mem_prod.2 ⟨hz', hw'⟩, Prod.associated_iff.2 ⟨hz'₂, hw'₂⟩⟩
 
 theorem submonoid.powers_absorbing {R : Type*} [CommRing R] [IsDomain R] {p : R} (hp : Prime p) :
     (Submonoid.powers p).ProdProperty := by
@@ -91,8 +86,8 @@ theorem fst_prodProperty [Monoid M] [Monoid N] {s : Submonoid M} {t : Submonoid 
   specialize h (x, 1) (y, 1)
   rw [Prod.mk_one_mul_mk_one] at h
   obtain ⟨⟨a, ha, ha₂⟩, b, hb, hb₂⟩ := h (Submonoid.mem_prod.2 ⟨hxy, t.one_mem⟩)
-  exact ⟨⟨a.1, (Submonoid.mem_prod.1 ha).1, (Subsemigroup.prod_associated_iff.1 ha₂).1⟩, b.1,
-    (Submonoid.mem_prod.1 hb).1, (Subsemigroup.prod_associated_iff.1 hb₂).1⟩
+  exact ⟨⟨a.1, (Submonoid.mem_prod.1 ha).1, (Subsemigroup.Prod.associated_iff.1 ha₂).1⟩, b.1,
+    (Submonoid.mem_prod.1 hb).1, (Subsemigroup.Prod.associated_iff.1 hb₂).1⟩
 
 theorem snd_prodProperty [Monoid M] [Monoid N] {s : Submonoid M} {t : Submonoid N} :
     (s.prod t).ProdProperty → t.ProdProperty := by
@@ -100,8 +95,8 @@ theorem snd_prodProperty [Monoid M] [Monoid N] {s : Submonoid M} {t : Submonoid 
   specialize h (1, x) (1, y)
   rw [Prod.one_mk_mul_one_mk] at h
   obtain ⟨⟨a, ha, ha₂⟩, b, hb, hb₂⟩ := h (Submonoid.mem_prod.2 ⟨s.one_mem, hxy⟩)
-  exact ⟨⟨a.2, (Submonoid.mem_prod.1 ha).2, (Subsemigroup.prod_associated_iff.1 ha₂).2⟩, b.2,
-    (Submonoid.mem_prod.1 hb).2, (Subsemigroup.prod_associated_iff.1 hb₂).2⟩
+  exact ⟨⟨a.2, (Submonoid.mem_prod.1 ha).2, (Subsemigroup.Prod.associated_iff.1 ha₂).2⟩, b.2,
+    (Submonoid.mem_prod.1 hb).2, (Subsemigroup.Prod.associated_iff.1 hb₂).2⟩
 
 /-- Given two submonoids `s`, `t` of monoids `M`, `N` respectively,
 if `s × t` satisfies the property, then `s` and `t` both satisfy it as well. -/

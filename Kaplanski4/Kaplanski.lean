@@ -148,6 +148,18 @@ theorem exists_prime_of_uniqueFactorizationMonoid [CommSemiring R] [IsDomain R]
     · exfalso
       exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ u.isUnit)
 
+theorem exists_associated_mem_of_dvd_prod_test [CancelCommMonoidWithZero R] {p : R}
+    {s : Multiset R} : (∀ r ∈ s, Prime r) → p ∣ s.prod → ∃ (q : Multiset R), Multiset.Subset q s →
+    Associated p q.prod := by
+  refine' Multiset.induction_on s _ _
+  · rintro h₁ h₂
+    use 0
+    have h₃ := Multiset.Subset.refl (0 : Multiset R)
+    refine' (fun h₃ => _)
+    simp at *
+    sorry
+  · rintro a s h₁ h₂ h₃
+
 local notation "P" => { r : R | Prime r }
 local notation "S" => Submonoid.closure P
 

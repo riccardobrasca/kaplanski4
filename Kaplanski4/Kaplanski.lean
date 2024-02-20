@@ -1,20 +1,19 @@
 import Mathlib.RingTheory.PrincipalIdealDomain
---import Kaplanski4.Absorbing
 
 variable {R : Type*}
 
-/-- The set of ideals of the ring R which do not intersect the submonoid S -/
-def Kaplansky.set [Semiring R] (S : Submonoid R) :=
+/-- The set of ideals of the ring R which do not intersect the subsemigroup S -/
+def Kaplansky.set [Semiring R] (S : Subsemigroup R) :=
   { I : Ideal R | (I : Set R) ∩ S = ∅ }
 
-theorem Kaplansky.set_def [Semiring R] (S : Submonoid R) {P : Ideal R} :
+theorem Kaplansky.set_def [Semiring R] (S : Subsemigroup R) {P : Ideal R} :
     P ∈ Kaplansky.set S ↔ (P : Set R) ∩ S = ∅ := Iff.rfl
 
 section Existence
 
 /-- The proof of 'exists_maximal_ideal' uses Zorn's lemma so the following theorem checks that
 every chain of 'Kaplansky.set S' has an upper bound. -/
-theorem hypothesis_zorn_lemma [Semiring R] {S : Submonoid R} (C : Set (Ideal R))
+theorem hypothesis_zorn_lemma [Semiring R] {S : Subsemigroup R} (C : Set (Ideal R))
     (hC : C ⊆ Kaplansky.set S) (hC₂ : IsChain (· ≤ ·) C) {I : Ideal R} (hI : I ∈ C) :
     ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
   refine' ⟨sSup C, _, fun z hz => le_sSup hz⟩
@@ -26,7 +25,7 @@ theorem hypothesis_zorn_lemma [Semiring R] {S : Submonoid R} (C : Set (Ideal R))
 
 /-- The existence of a maximal element of 'Kaplansky.set S'
 (which we will use to prove Kaplansky's criterion). -/
-theorem exists_maximal_ideal [Semiring R] {S : Submonoid R} (hS : 0 ∉ S) :
+theorem exists_maximal_ideal [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) :
     ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
   have hx : 0 ∈ Kaplansky.set S := by
     rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
@@ -43,12 +42,17 @@ section Basic
 
 /-- If an ideal P satisfies the condition P ∩ S = ∅, then P ≠ R
 (this is used to prove that P is prime). -/
-theorem ideal_neq_top [Semiring R] {S : Submonoid R} {P : Ideal R}
-    (hP : P ∈ Kaplansky.set S) : P ≠ ⊤ :=
-  fun h => ((Set.disjoint_left.1 (Set.disjoint_iff_inter_eq_empty.2 ((Kaplansky.set_def _).1 hP)))
-    (P.eq_top_iff_one.1 h)) S.one_mem
+theorem ideal_neq_top [Semiring R] {S : Subsemigroup R} (hS : (S : Set R).Nonempty) {P : Ideal R}
+    (hP : P ∈ Kaplansky.set S) : P ≠ ⊤ := by
+  intro h
+  unfold Kaplansky.set at hP
+  rw [h, Set.mem_setOf, Set.eq_empty_iff_forall_not_mem] at hP
+  cases' (Set.nonempty_def.1 hS) with x h₂
+  specialize hP x
+  apply hP
+  refine' Set.mem_inter (Set.mem_univ x) h₂
 
-theorem exists_mem_inter [Semiring R] {S : Submonoid R} {P : Ideal R} {I : Ideal R}
+theorem exists_mem_inter [Semiring R] {S : Subsemigroup R} {P : Ideal R} {I : Ideal R}
     (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) (h : P < I) : ∃ x : R, x ∈ (I : Set R) ∩ S :=
   Set.inter_nonempty.1
     (Set.nonempty_iff_ne_empty.2 fun h₂ =>
@@ -56,7 +60,7 @@ theorem exists_mem_inter [Semiring R] {S : Submonoid R} {P : Ideal R} {I : Ideal
 
 /-- This is checked to prove that an ideal P which is maximal with respect to
 the condition P ∩ S = ∅ is also prime. -/
-theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Submonoid R} (x y : R)
+theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Subsemigroup R} (x y : R)
     (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) :
     x * y ∈ P → x ∈ P ∨ y ∈ P := by
   intro hxy
@@ -85,9 +89,10 @@ theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Submonoid R} (
     Set.eq_empty_iff_forall_not_mem.1 hP (s * t) ⟨h₃ (Ideal.mul_mem_mul hs ht), S.mul_mem hs' ht'⟩
 
 /-- If an ideal P is maximal with respect to the condition P ∩ S = ∅, then it is prime. -/
-theorem isPrime_of_maximal [CommSemiring R] {P : Ideal R} {S : Submonoid R}
-    (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) : P.IsPrime :=
-  ⟨ideal_neq_top hP, fun h => mem_or_mem_of_mul_mem _ _ hP hmax h⟩
+theorem isPrime_of_maximal [CommSemiring R] {P : Ideal R} {S : Subsemigroup R}
+    (hS : (S : Set R).Nonempty) (hP : P ∈ Kaplansky.set S)
+    (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) : P.IsPrime :=
+  ⟨ideal_neq_top hS hP, fun h => mem_or_mem_of_mul_mem _ _ hP hmax h⟩
 
 end Basic
 
@@ -148,19 +153,6 @@ theorem exists_prime_of_uniqueFactorizationMonoid [CommSemiring R] [IsDomain R]
     · exfalso
       exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ u.isUnit)
 
-theorem exists_associated_mem_of_dvd_prod_test [CancelCommMonoidWithZero R] {p : R}
-    {s : Multiset R} : (∀ r ∈ s, Prime r) → p ∣ s.prod → ∃ (q : Multiset R), Multiset.Subset q s →
-    Associated p q.prod := by
-  refine' Multiset.induction_on s _ _
-  · rintro h₁ h₂
-    use 0
-    have h₃ := Multiset.Subset.refl (0 : Multiset R)
-    refine' (fun h₃ => _)
-    simp at *
-    sorry
-  · rintro a s h₁ h₂ h₃
-
-
 local notation "P" => { r : R | Prime r }
 local notation "S" => Submonoid.closure P
 
@@ -202,8 +194,9 @@ theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
       ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
 
 theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (ha : a ≠ 0)
-    (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
-    Ideal.span {a} ∉ Kaplansky.set (Submonoid.closure P) := by
+    (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x)
+    (hP : (P : Set R).Nonempty) :
+    Ideal.span {a} ∉ Kaplansky.set (Submonoid.closure P).toSubsemigroup := by
   have hzero : 0 ∉ Submonoid.closure P := by
     intro h
     rcases Submonoid.exists_multiset_of_mem_closure h with ⟨l, ⟨hl, hprod⟩⟩
@@ -214,19 +207,25 @@ theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (h
     intro h₂
     rw [h₂] at hT₂
     exact ha (Ideal.span_singleton_eq_bot.1 (hT₂ (Ideal.span {a}) h (zero_le (Ideal.span {a}))))
-  rcases (H T) hT₃ (isPrime_of_maximal hT hT₂) with ⟨x, H₃, H₄⟩
+  rw [Set.nonempty_def] at hP
+  cases' hP with x hx
+  have := Set.mem_of_subset_of_mem Submonoid.subset_closure hx
+  simp at this
+  rw [← Submonoid.mem_toSubsemigroup] at this
+  have := Set.nonempty_def.2 ⟨x, this⟩
+  rcases (H T) hT₃ (isPrime_of_maximal this hT hT₂) with ⟨x, H₃, H₄⟩
   rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hT
   exact hT x ⟨H₃, Submonoid.subset_closure H₄⟩
 
 /-- The other implication of Kaplansky's criterion (if every nonzero prime ideal of
 an integral domain R contains a prime element, then R is a UFD). -/
 theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
-    (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x) :
-    UniqueFactorizationMonoid R := by
+    (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x)
+    (hP : (P : Set R).Nonempty) : UniqueFactorizationMonoid R := by
   refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
   have ha₂ := ideal.span_ne_mem_kaplanski.set ha H
   rw [Kaplansky.set_def, ← Ne.def] at ha₂
-  rcases Set.nonempty_iff_ne_empty.2 ha₂ with ⟨x, ⟨hx, hx₂⟩⟩
+  rcases Set.nonempty_iff_ne_empty.2 (ha₂ hP) with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
   rw [← hb, mul_comm] at hx₂
   obtain ⟨z, hzmem, hass⟩ := submonoid.closure_primes_absorbing _ _ hx₂
@@ -236,12 +235,12 @@ theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
 
 /-- Kaplansky's criterion (an integral domain R is a UFD if and only if every nonzero prime ideal
 contains a prime element). -/
-theorem uniqueFactorizationMonoid_iff [CommSemiring R] [IsDomain R] :
+theorem uniqueFactorizationMonoid_iff [CommSemiring R] [IsDomain R] (hP : (P : Set R).Nonempty) :
   UniqueFactorizationMonoid R ↔ ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x := by
   constructor
   intro u I hI hI₂
   exact exists_prime_of_uniqueFactorizationMonoid hI hI₂
   intro H
-  exact uniqueFactorizationMonoid_of_exists_prime H
+  exact uniqueFactorizationMonoid_of_exists_prime H hP
 
 end Kaplansky

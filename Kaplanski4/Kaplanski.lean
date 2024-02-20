@@ -44,12 +44,12 @@ section Basic
 theorem ideal_neq_top [Semiring R] {S : Subsemigroup R} (hS : (S : Set R).Nonempty) {P : Ideal R}
     (hP : P ∈ Kaplansky.set S) : P ≠ ⊤ := by
   intro h
-  unfold Kaplansky.set at hP
-  rw [h, Set.mem_setOf, Set.eq_empty_iff_forall_not_mem] at hP
-  cases' (Set.nonempty_def.1 hS) with x h₂
+  rw [Kaplansky.set, h, Set.mem_setOf, Set.eq_empty_iff_forall_not_mem] at hP
+  rw [Set.nonempty_def] at hS
+  cases' hS with x h₂
   specialize hP x
   apply hP
-  refine' Set.mem_inter (Set.mem_univ x) h₂
+  exact (Set.mem_inter (Set.mem_univ x) h₂)
 
 theorem exists_mem_inter [Semiring R] {S : Subsemigroup R} {P : Ideal R} {I : Ideal R}
     (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) (h : P < I) : ∃ x : R, x ∈ (I : Set R) ∩ S :=
@@ -64,7 +64,7 @@ theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Subsemigroup R
     x * y ∈ P → x ∈ P ∨ y ∈ P := by
   intro hxy
   by_contra h
-  push_neg  at h
+  push_neg at h
   cases' h with h' h''
   let I := P ⊔ Ideal.span {x}
   let J := P ⊔ Ideal.span {y}
@@ -167,17 +167,17 @@ theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
   rintro s hind b a _ ⟨hprime, hprod⟩
   rcases s.empty_or_exists_mem with (hempty | ⟨i, hi⟩)
   · simp [hempty] at hprod
-    exact ⟨1, (Submonoid.closure P).one_mem, associated_one_of_mul_eq_one _ hprod.symm⟩
+    exact ⟨1, Submonoid.one_mem S, associated_one_of_mul_eq_one _ hprod.symm⟩
   rw [← Multiset.prod_erase hi] at hprod
   rcases(hprime i hi).dvd_or_dvd ⟨(s.erase i).prod, hprod.symm⟩ with (⟨x, hxb⟩ | ⟨x, hxa⟩)
-  · suffices ∃ z ∈ Submonoid.closure P, Associated x z by
+  · suffices ∃ z ∈ S, Associated x z by
       obtain ⟨z, hz, hzx⟩ := this
       refine' ⟨z * i, Submonoid.mul_mem _ hz (Submonoid.subset_closure (hprime _ hi)), _⟩
       rw [hxb, mul_comm z i]
       exact Associated.mul_left i hzx
     rw [hxb, mul_assoc] at hprod
     replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime _ hi).ne_zero hprod
-    have hxamem : x * a ∈ Submonoid.closure P := by
+    have hxamem : x * a ∈ S := by
       rw [← hprod]
       exact Submonoid.multiset_prod_mem _ _ fun x hx =>
         Submonoid.subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
@@ -185,7 +185,7 @@ theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
       ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
   · rw [hxa, ← mul_assoc, mul_comm b i, mul_assoc] at hprod
     replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime i hi).ne_zero hprod
-    have hbxmem : b * x ∈ Submonoid.closure P := by
+    have hbxmem : b * x ∈ S := by
       rw [← hprod]
       exact Submonoid.multiset_prod_mem _ _ fun x hx =>
         Submonoid.subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
@@ -195,8 +195,8 @@ theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
 theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (ha : a ≠ 0)
     (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x)
     (hP : (P : Set R).Nonempty) :
-    Ideal.span {a} ∉ Kaplansky.set (Submonoid.closure P).toSubsemigroup := by
-  have hzero : 0 ∉ Submonoid.closure P := by
+    Ideal.span {a} ∉ Kaplansky.set (Submonoid.toSubsemigroup S) := by
+  have hzero : 0 ∉ S := by
     intro h
     rcases Submonoid.exists_multiset_of_mem_closure h with ⟨l, ⟨hl, hprod⟩⟩
     exact not_prime_zero (hl 0 (Multiset.prod_eq_zero_iff.1 hprod))

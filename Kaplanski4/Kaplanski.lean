@@ -6,35 +6,34 @@ variable {R : Type*}
 def Kaplansky.set [Semiring R] (S : Subsemigroup R) :=
   { I : Ideal R | (I : Set R) ∩ S = ∅ }
 
-theorem Kaplansky.set_def [Semiring R] (S : Subsemigroup R) {P : Ideal R} :
+theorem Kaplansky.set_def [Semiring R] (S : Subsemigroup R) (P : Ideal R) :
     P ∈ Kaplansky.set S ↔ (P : Set R) ∩ S = ∅ := Iff.rfl
 
 section Existence
 
-/-- The proof of 'exists_maximal_ideal' uses Zorn's lemma so the following theorem checks that
-every chain of 'Kaplansky.set S' has an upper bound. -/
-theorem hypothesis_zorn_lemma [Semiring R] {S : Subsemigroup R} (C : Set (Ideal R))
-    (hC : C ⊆ Kaplansky.set S) (hC₂ : IsChain (· ≤ ·) C) {I : Ideal R} (hI : I ∈ C) :
+/-- Every chain of 'Kaplansky.set S' has an upper bound. -/
+theorem hypothesis_zorn_lemma [Semiring R] (S : Subsemigroup R) (hS : 0 ∉ S) (C : Set (Ideal R))
+    (hC : C ⊆ Kaplansky.set S) (hC₂ : IsChain (· ≤ ·) C) :
     ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
-  refine' ⟨sSup C, _, fun z hz => le_sSup hz⟩
-  rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
-  rintro x hx
-  rcases (Submodule.mem_sSup_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
-  have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
-  exact hx₂ (hC hJ₁)
+  by_cases h : C.Nonempty
+  · cases' (Set.nonempty_def.1 h) with I hI
+    refine' ⟨sSup C, _, fun z hz => le_sSup hz⟩
+    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
+    rintro x hx
+    rcases (Submodule.mem_sSup_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
+    have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
+    exact hx₂ (hC hJ₁)
+  · rw [Set.not_nonempty_iff_eq_empty.1 h]
+    use ⊥
+    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
+    simp
+    exact hS
 
 /-- The existence of a maximal element of 'Kaplansky.set S'
 (which we will use to prove Kaplansky's criterion). -/
-theorem exists_maximal_ideal [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) :
-    ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
-  have hx : 0 ∈ Kaplansky.set S := by
-    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
-    rintro y ⟨hy₁, hy₂⟩
-    rw [SetLike.mem_coe, Ideal.zero_eq_bot, Ideal.mem_bot] at hy₁
-    rw [hy₁] at hy₂
-    exact hS hy₂
-  rcases zorn_nonempty_partialOrder₀ _ hypothesis_zorn_lemma _ hx with ⟨J, hJ, _, hJ₃⟩
-  exact ⟨J, hJ, hJ₃⟩
+theorem exists_maximal_ideal [Semiring R] (S : Subsemigroup R) (hS : 0 ∉ S) :
+    ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P :=
+  zorn_partialOrder₀ (Kaplansky.set S) (hypothesis_zorn_lemma S hS)
 
 end Existence
 
@@ -202,7 +201,7 @@ theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (h
     rcases Submonoid.exists_multiset_of_mem_closure h with ⟨l, ⟨hl, hprod⟩⟩
     exact not_prime_zero (hl 0 (Multiset.prod_eq_zero_iff.1 hprod))
   intro h
-  rcases exists_maximal_ideal hzero with ⟨T, hT, hT₂⟩
+  rcases exists_maximal_ideal _ hzero with ⟨T, hT, hT₂⟩
   have hT₃ : T ≠ ⊥ := by
     intro h₂
     rw [h₂] at hT₂

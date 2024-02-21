@@ -169,7 +169,7 @@ theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
   · simp [hempty] at hprod
     exact ⟨1, Submonoid.one_mem S, associated_one_of_mul_eq_one _ hprod.symm⟩
   rw [← Multiset.prod_erase hi] at hprod
-  rcases(hprime i hi).dvd_or_dvd ⟨(s.erase i).prod, hprod.symm⟩ with (⟨x, hxb⟩ | ⟨x, hxa⟩)
+  rcases (hprime i hi).dvd_or_dvd ⟨(s.erase i).prod, hprod.symm⟩ with (⟨x, hxb⟩ | ⟨x, hxa⟩)
   · suffices ∃ z ∈ S, Associated x z by
       obtain ⟨z, hz, hzx⟩ := this
       refine' ⟨z * i, Submonoid.mul_mem _ hz (Submonoid.subset_closure (hprime _ hi)), _⟩
@@ -237,7 +237,7 @@ contains a prime element). -/
 theorem uniqueFactorizationMonoid_iff [CommSemiring R] [IsDomain R] (hP : (P : Set R).Nonempty) :
   UniqueFactorizationMonoid R ↔ ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x := by
   constructor
-  intro u I hI hI₂
+  intro _ _ hI hI₂
   exact exists_prime_of_uniqueFactorizationMonoid hI hI₂
   intro H
   exact uniqueFactorizationMonoid_of_exists_prime H hP

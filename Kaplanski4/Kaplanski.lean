@@ -97,57 +97,25 @@ end Basic
 
 section Kaplansky
 
-theorem exists_mem_of_mem [Semiring R] {I : Ideal R} (s : List R) (hI : I.IsPrime) :
-    s.prod ∈ I → ∃ (p : R) (_ : p ∈ s), p ∈ I := by
-  intro hs
-  by_contra h
-  push_neg at h
-  have hs₃ : s.prod ∉ I := by
-    induction' s with a l hl
-    · rw [List.prod_nil]
-      intro hI₂
-      rw [← Ideal.eq_top_iff_one] at hI₂
-      exact Ideal.IsPrime.ne_top hI hI₂
-    · rw [List.prod_cons] at hs
-      have hprime := Ideal.IsPrime.mem_or_mem hI hs
-      cases' hprime with ha hl₂
-      · have ha₂ := h a (List.mem_cons_self a l)
-        contradiction
-      · rw [List.prod_cons]
-        intro h₂
-        have _ := Ideal.IsPrime.mem_or_mem hI h₂
-        specialize hl hl₂ (fun p hp => h p (List.mem_cons_of_mem a hp))
-        contradiction
-  contradiction
-
 theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
-    s.prod ∈ I ↔ ∃ (p : R) (_ : p ∈ s), p ∈ I := by
-  classical
-    constructor
-    intro hs
-    rw [← Multiset.prod_toList] at hs
-    rcases (exists_mem_of_mem s.toList hI hs) with ⟨p, ⟨hs₂, hpI⟩⟩
-    exact ⟨p, Multiset.mem_toList.1 hs₂, hpI⟩
-    · intro hs
-      rcases hs with ⟨p, ⟨hs₂, hs₃⟩⟩
-      rw [← Multiset.prod_erase hs₂]
-      exact Ideal.mul_mem_right _ _ hs₃
+    s.prod ∈ I ↔ ∃ p ∈ s, p ∈ I := by
+  simpa [← Ideal.span_singleton_le_iff_mem] using (hI.multiset_prod_map_le (fun r ↦ Ideal.span {r}))
 
 /-- One implication of Kaplansky's criterion (if an integral domain R is a UFD, then every nonzero
 prime ideal contains a prime element). -/
-theorem exists_prime_of_uniqueFactorizationMonoid [CommSemiring R] [IsDomain R]
+theorem exists_prime_of_uniqueFactorizationMonoid [CommSemiring R] [IsDomain R] [DecidableEq R]
   [UniqueFactorizationMonoid R] {I : Ideal R}
   (hI : I ≠ ⊥) (hI₂ : I.IsPrime) : ∃ x ∈ I, Prime x := by
-    classical
     have := Submodule.exists_mem_ne_zero_of_ne_bot hI
     have ha : ∃ a : R, a ∈ I ∧ a ≠ 0 := by
       rcases this with ⟨b, hb, hb₂⟩
       use b
     rcases ha with ⟨a, ⟨ha₁, ha₂⟩⟩
-    cases' UniqueFactorizationMonoid.factors_prod ha₂ with u ha₃
+    rcases UniqueFactorizationMonoid.factors_prod ha₂ with ⟨u, ha₃⟩
     rw [← ha₃] at ha₁
     cases' (Ideal.IsPrime.mem_or_mem hI₂) ha₁ with ha₄ ha₅
-    · rcases (mem_iff (UniqueFactorizationMonoid.factors a) hI₂).1 ha₄ with ⟨p, ha₅, ha₆⟩
+    · have this := (mem_iff (UniqueFactorizationMonoid.factors a) hI₂).1 ha₄
+      rcases this with ⟨p, ha₅, ha₆⟩
       refine' ⟨p, ha₆, UniqueFactorizationMonoid.prime_of_factor p ha₅⟩
     · exfalso
       exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ u.isUnit)

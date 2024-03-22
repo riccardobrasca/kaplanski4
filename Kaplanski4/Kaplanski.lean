@@ -101,25 +101,6 @@ theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime)
     s.prod ∈ I ↔ ∃ p ∈ s, p ∈ I := by
   simpa [← Ideal.span_singleton_le_iff_mem] using (hI.multiset_prod_map_le (fun r ↦ Ideal.span {r}))
 
-/-- One implication of Kaplansky's criterion (if an integral domain R is a UFD, then every nonzero
-prime ideal contains a prime element). -/
-theorem exists_prime_of_uniqueFactorizationMonoid [CommSemiring R] [IsDomain R] [DecidableEq R]
-  [UniqueFactorizationMonoid R] {I : Ideal R}
-  (hI : I ≠ ⊥) (hI₂ : I.IsPrime) : ∃ x ∈ I, Prime x := by
-    have := Submodule.exists_mem_ne_zero_of_ne_bot hI
-    have ha : ∃ a : R, a ∈ I ∧ a ≠ 0 := by
-      rcases this with ⟨b, hb, hb₂⟩
-      use b
-    rcases ha with ⟨a, ⟨ha₁, ha₂⟩⟩
-    rcases UniqueFactorizationMonoid.factors_prod ha₂ with ⟨u, ha₃⟩
-    rw [← ha₃] at ha₁
-    cases' (Ideal.IsPrime.mem_or_mem hI₂) ha₁ with ha₄ ha₅
-    · have this := (mem_iff (UniqueFactorizationMonoid.factors a) hI₂).1 ha₄
-      rcases this with ⟨p, ha₅, ha₆⟩
-      refine' ⟨p, ha₆, UniqueFactorizationMonoid.prime_of_factor p ha₅⟩
-    · exfalso
-      exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ u.isUnit)
-
 local notation "P" => { r : R | Prime r }
 local notation "S" => Submonoid.closure P
 
@@ -204,9 +185,10 @@ theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
 contains a prime element). -/
 theorem uniqueFactorizationMonoid_iff [CommSemiring R] [IsDomain R] (hP : (P : Set R).Nonempty) :
   UniqueFactorizationMonoid R ↔ ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x := by
+  classical
   constructor
   intro _ _ hI hI₂
-  exact exists_prime_of_uniqueFactorizationMonoid hI hI₂
+  exact Ideal.IsPrime.exists_mem_prime_of_ne_bot hI₂ hI
   intro H
   exact uniqueFactorizationMonoid_of_exists_prime H hP
 

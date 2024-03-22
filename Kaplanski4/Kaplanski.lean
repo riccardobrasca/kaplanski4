@@ -152,45 +152,49 @@ theorem exists_prime_of_uniqueFactorizationMonoid [CommSemiring R] [IsDomain R]
     · exfalso
       exact (Ideal.isPrime_iff.1 hI₂).1 (Ideal.eq_top_of_isUnit_mem _ ha₅ u.isUnit)
 
-local notation "P" => { r : R | Prime r }
-local notation "S" => Submonoid.closure P
-
+open Submonoid in
 /-- Let a, b ∈ R. If ab can be written as a product of prime elements, then a can be written as
 a product of a unit and prime elements. The same goes for b. -/
-theorem submonoid.closure_primes_absorbing [CancelCommMonoidWithZero R] :
-    ∀ x y, x * y ∈ S → ∃ z ∈ S, Associated x z := by
+theorem submonoid.closure_exists_mem_of_prod_mem [CancelCommMonoidWithZero R] :
+    ∀ x y, x * y ∈ closure { r : R | Prime r } →
+    ∃ z ∈ closure { r : R | Prime r }, Associated x z := by
+  let P := { r : R | Prime r }
+  let S := closure P
   classical
   intro a b hab
-  obtain ⟨m, hm⟩ := Submonoid.exists_multiset_of_mem_closure hab
+  obtain ⟨m, hm⟩ := exists_multiset_of_mem_closure hab
   revert hm a b
   refine' Multiset.strongInductionOn m _
   rintro s hind b a _ ⟨hprime, hprod⟩
   rcases s.empty_or_exists_mem with (hempty | ⟨i, hi⟩)
   · simp [hempty] at hprod
-    exact ⟨1, Submonoid.one_mem S, associated_one_of_mul_eq_one _ hprod.symm⟩
+    exact ⟨1, one_mem S, associated_one_of_mul_eq_one _ hprod.symm⟩
   rw [← Multiset.prod_erase hi] at hprod
   rcases (hprime i hi).dvd_or_dvd ⟨(s.erase i).prod, hprod.symm⟩ with (⟨x, hxb⟩ | ⟨x, hxa⟩)
   · suffices ∃ z ∈ S, Associated x z by
       obtain ⟨z, hz, hzx⟩ := this
-      refine' ⟨z * i, Submonoid.mul_mem _ hz (Submonoid.subset_closure (hprime _ hi)), _⟩
+      refine' ⟨z * i, mul_mem hz (subset_closure (hprime _ hi)), _⟩
       rw [hxb, mul_comm z i]
       exact Associated.mul_left i hzx
     rw [hxb, mul_assoc] at hprod
     replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime _ hi).ne_zero hprod
     have hxamem : x * a ∈ S := by
       rw [← hprod]
-      exact Submonoid.multiset_prod_mem _ _ fun x hx =>
-        Submonoid.subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
+      exact multiset_prod_mem _ _ fun x hx =>
+        subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
     exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hxamem
       ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
   · rw [hxa, ← mul_assoc, mul_comm b i, mul_assoc] at hprod
     replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime i hi).ne_zero hprod
     have hbxmem : b * x ∈ S := by
       rw [← hprod]
-      exact Submonoid.multiset_prod_mem _ _ fun x hx =>
-        Submonoid.subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
+      exact multiset_prod_mem _ _ fun x hx =>
+        subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
     exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hbxmem
       ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
+
+local notation "P" => { r : R | Prime r }
+local notation "S" => Submonoid.closure P
 
 theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (ha : a ≠ 0)
     (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x)
@@ -227,7 +231,7 @@ theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
   rcases Set.nonempty_iff_ne_empty.2 (ha₂ hP) with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
   rw [← hb, mul_comm] at hx₂
-  obtain ⟨z, hzmem, hass⟩ := submonoid.closure_primes_absorbing _ _ hx₂
+  obtain ⟨z, hzmem, hass⟩ := submonoid.closure_exists_mem_of_prod_mem _ _ hx₂
   obtain ⟨m, hprime, hprod⟩ := Submonoid.exists_multiset_of_mem_closure hzmem
   refine' ⟨m, hprime, _⟩
   rwa [hprod, Associated.comm]

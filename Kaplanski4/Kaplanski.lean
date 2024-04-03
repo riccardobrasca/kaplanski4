@@ -101,46 +101,48 @@ theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime)
     s.prod ∈ I ↔ ∃ p ∈ s, p ∈ I := by
   simpa [← Ideal.span_singleton_le_iff_mem] using (hI.multiset_prod_map_le (fun r ↦ Ideal.span {r}))
 
+theorem mem_closure_of_exists_multiset {M : Type*} [CommMonoid M] {s : Set M} {x : M}
+    (hx : ∃ (l : Multiset M) (_ : ∀ y ∈ l, y ∈ s), l.prod = x) : x ∈ Submonoid.closure s := by
+  rcases hx with ⟨m, ⟨hm, hx⟩⟩
+  rw [← hx]
+  exact multiset_prod_mem m (fun a ha =>
+    Set.mem_of_subset_of_mem (Submonoid.subset_closure) (hm a ha))
+
+theorem mem_closure_iff_exists_multiset {M : Type*} [CommMonoid M] {s : Set M} {x : M} :
+    (∃ (l : Multiset M) (_ : ∀ y ∈ l, y ∈ s), l.prod = x) ↔ x ∈ Submonoid.closure s :=
+  ⟨mem_closure_of_exists_multiset, Submonoid.exists_multiset_of_mem_closure⟩
+
 open Submonoid in
 /-- Let a, b ∈ R. If ab can be written as a product of prime elements, then a can be written as
 a product of a unit and prime elements. The same goes for b. -/
 theorem submonoid.closure_exists_mem_of_prod_mem [CancelCommMonoidWithZero R] :
     ∀ x y, x * y ∈ closure { r : R | Prime r } →
     ∃ z ∈ closure { r : R | Prime r }, Associated x z := by
-  let P := { r : R | Prime r }
-  let S := closure P
-  classical
-  intro a b hab
+  intros a b hab
   obtain ⟨m, hm⟩ := exists_multiset_of_mem_closure hab
-  revert hm a b
-  refine' Multiset.strongInductionOn m _
-  rintro s hind b a _ ⟨hprime, hprod⟩
-  rcases s.empty_or_exists_mem with (hempty | ⟨i, hi⟩)
-  · simp [hempty] at hprod
-    exact ⟨1, one_mem S, associated_one_of_mul_eq_one _ hprod.symm⟩
-  rw [← Multiset.prod_erase hi] at hprod
-  rcases (hprime i hi).dvd_or_dvd ⟨(s.erase i).prod, hprod.symm⟩ with (⟨x, hxb⟩ | ⟨x, hxa⟩)
-  · suffices ∃ z ∈ S, Associated x z by
-      obtain ⟨z, hz, hzx⟩ := this
-      refine' ⟨z * i, mul_mem hz (subset_closure (hprime _ hi)), _⟩
-      rw [hxb, mul_comm z i]
-      exact Associated.mul_left i hzx
-    rw [hxb, mul_assoc] at hprod
-    replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime _ hi).ne_zero hprod
-    have hxamem : x * a ∈ S := by
-      rw [← hprod]
-      exact multiset_prod_mem _ _ fun x hx =>
-        subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
-    exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hxamem
-      ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
-  · rw [hxa, ← mul_assoc, mul_comm b i, mul_assoc] at hprod
-    replace hprod := IsLeftCancelMulZero.mul_left_cancel_of_ne_zero (hprime i hi).ne_zero hprod
-    have hbxmem : b * x ∈ S := by
-      rw [← hprod]
-      exact multiset_prod_mem _ _ fun x hx =>
-        subset_closure (hprime _ (Multiset.erase_subset _ _ hx))
-    exact hind (s.erase i) (Multiset.erase_lt.2 hi) _ _ hbxmem
-      ⟨fun y hy => hprime y ((s.erase_subset _) hy), hprod⟩
+  revert a b hm
+  refine' m.induction (p := fun m => ∀ (a b : R), a * b ∈ closure {r | Prime r} →
+    (∃ (_ : ∀ y ∈ m, y ∈ {r | Prime r}), Multiset.prod m = a * b) → ∃ z ∈ closure {r | Prime r},
+    Associated a z) _ _
+  simp only [Multiset.prod_zero, Multiset.not_mem_zero, Set.mem_setOf_eq, IsEmpty.forall_iff,
+    forall_const, exists_const]
+  exact (fun _ _ _ hprod => ⟨1, one_mem (closure { r : R | Prime r }),
+    associated_one_of_mul_eq_one _ hprod.symm⟩)
+  simp only [Set.mem_setOf_eq, exists_prop, and_imp, Multiset.prod_cons, Multiset.mem_cons,
+    forall_eq_or_imp]
+  intros a s hind x y _ hprime hprime₂ hprod
+  cases' hprime.dvd_mul.1 (Dvd.intro s.prod hprod) with h₁ h₂
+  · rcases h₁ with ⟨c, h₁⟩
+    rw [h₁, mul_assoc] at hprod
+    have hprod₂ := mul_left_cancel₀ (hprime.ne_zero) hprod
+    rcases (hind c y (mem_closure_of_exists_multiset ⟨s, hprime₂, hprod₂⟩) hprime₂ hprod₂)
+      with ⟨z, ⟨hz₁, hz₂⟩⟩
+    rw [h₁]
+    exact ⟨a*z, mul_mem (Set.mem_of_subset_of_mem subset_closure hprime) hz₁, hz₂.mul_left a⟩
+  · rcases h₂ with ⟨c, h₂⟩
+    rw [h₂, ← mul_assoc, mul_comm x a, mul_assoc] at hprod
+    have hprod₂ := mul_left_cancel₀ (hprime.ne_zero) hprod
+    exact (hind x c (mem_closure_of_exists_multiset ⟨s, hprime₂, hprod₂⟩) hprime₂ hprod₂)
 
 local notation "P" => { r : R | Prime r }
 local notation "S" => Submonoid.closure P

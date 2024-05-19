@@ -97,10 +97,6 @@ end Basic
 
 section Kaplansky
 
-theorem mem_iff [CommSemiring R] {I : Ideal R} (s : Multiset R) (hI : I.IsPrime) :
-    s.prod ∈ I ↔ ∃ p ∈ s, p ∈ I := by
-  simpa [← Ideal.span_singleton_le_iff_mem] using (hI.multiset_prod_map_le (fun r ↦ Ideal.span {r}))
-
 theorem mem_closure_of_exists_multiset {M : Type*} [CommMonoid M] {s : Set M} {x : M}
     (hx : ∃ (l : Multiset M) (_ : ∀ y ∈ l, y ∈ s), l.prod = x) : x ∈ Submonoid.closure s := by
   rcases hx with ⟨m, ⟨hm, hx⟩⟩
@@ -108,41 +104,42 @@ theorem mem_closure_of_exists_multiset {M : Type*} [CommMonoid M] {s : Set M} {x
   exact multiset_prod_mem m (fun a ha =>
     Set.mem_of_subset_of_mem (Submonoid.subset_closure) (hm a ha))
 
-theorem mem_closure_iff_exists_multiset {M : Type*} [CommMonoid M] {s : Set M} {x : M} :
-    (∃ (l : Multiset M) (_ : ∀ y ∈ l, y ∈ s), l.prod = x) ↔ x ∈ Submonoid.closure s :=
-  ⟨mem_closure_of_exists_multiset, Submonoid.exists_multiset_of_mem_closure⟩
-
 open Submonoid in
-/-- Let a, b ∈ R. If ab can be written as a product of prime elements, then a can be written as
-a product of a unit and prime elements. The same goes for b. -/
-theorem submonoid.closure_exists_mem_of_prod_mem [CancelCommMonoidWithZero R] :
-    ∀ x y, x * y ∈ closure { r : R | Prime r } →
-    ∃ z ∈ closure { r : R | Prime r }, Associated x z := by
+theorem Submonoid.closure_mem_of_prod_mem [CancelCommMonoidWithZero R] :
+    ∀ x y, x * y ∈ closure { r : R | IsUnit r ∨ Prime r} →
+    x ∈ closure { r : R | IsUnit r ∨ Prime r} := by
   intros a b hab
   obtain ⟨m, hm⟩ := exists_multiset_of_mem_closure hab
   revert a b hm
-  refine' m.induction (p := fun m => ∀ (a b : R), a * b ∈ closure {r | Prime r} →
-    (∃ (_ : ∀ y ∈ m, y ∈ {r | Prime r}), Multiset.prod m = a * b) → ∃ z ∈ closure {r | Prime r},
-    Associated a z) _ _
-  simp only [Multiset.prod_zero, Multiset.not_mem_zero, Set.mem_setOf_eq, IsEmpty.forall_iff,
-    forall_const, exists_const]
-  exact (fun _ _ _ hprod => ⟨1, one_mem (closure { r : R | Prime r }),
-    associated_one_of_mul_eq_one _ hprod.symm⟩)
-  simp only [Set.mem_setOf_eq, exists_prop, and_imp, Multiset.prod_cons, Multiset.mem_cons,
+  refine' m.induction (p := fun m ↦ ∀ a b, a * b ∈ closure {r | IsUnit r ∨ Prime r} →
+    (∃ (_ : ∀ y ∈ m, y ∈ {r | IsUnit r ∨ Prime r}), m.prod = a * b) →
+    a ∈ closure {r | IsUnit r ∨ Prime r}) _ _
+  · simp only [Multiset.prod_zero, Multiset.not_mem_zero, Set.mem_setOf_eq, IsEmpty.forall_iff,
+      forall_const, exists_const]
+    refine' (fun _ _ _ hprod => subset_closure (Set.mem_def.2 _))
+    left
+    exact isUnit_of_mul_eq_one _ _ hprod.symm
+  · simp only [Set.mem_setOf_eq, exists_prop, and_imp, Multiset.prod_cons, Multiset.mem_cons,
     forall_eq_or_imp]
-  intros a s hind x y _ hprime hprime₂ hprod
-  cases' hprime.dvd_mul.1 (Dvd.intro s.prod hprod) with h₁ h₂
-  · rcases h₁ with ⟨c, h₁⟩
-    rw [h₁, mul_assoc] at hprod
-    have hprod₂ := mul_left_cancel₀ (hprime.ne_zero) hprod
-    rcases (hind c y (mem_closure_of_exists_multiset ⟨s, hprime₂, hprod₂⟩) hprime₂ hprod₂)
-      with ⟨z, ⟨hz₁, hz₂⟩⟩
-    rw [h₁]
-    exact ⟨a*z, mul_mem (Set.mem_of_subset_of_mem subset_closure hprime) hz₁, hz₂.mul_left a⟩
-  · rcases h₂ with ⟨c, h₂⟩
-    rw [h₂, ← mul_assoc, mul_comm x a, mul_assoc] at hprod
-    have hprod₂ := mul_left_cancel₀ (hprime.ne_zero) hprod
-    exact (hind x c (mem_closure_of_exists_multiset ⟨s, hprime₂, hprod₂⟩) hprime₂ hprod₂)
+    intros a s hind x y _ ha hs hprod
+    rcases ha with ha₁ | ha₂
+    · rcases ha₁.exists_right_inv with ⟨k, hk⟩
+      refine' hind x (y*k) (mem_closure_of_exists_multiset ⟨s, hs, _⟩) hs _
+      rw [← mul_one s.prod, ← hk, ← mul_assoc, mul_comm s.prod _, hprod, mul_assoc]
+      rw [← mul_one s.prod, ← hk, ← mul_assoc, mul_comm s.prod _, hprod, mul_assoc]
+    · rcases ha₂.dvd_mul.1 (Dvd.intro s.prod hprod) with h₁ | h₂
+      rcases h₁ with ⟨c, hc⟩
+      rw [hc]
+      rw [hc, mul_assoc] at hprod
+      refine' (closure {r | IsUnit r ∨ Prime r}).mul_mem (subset_closure (Set.mem_def.2 _))
+        (hind c y (mem_closure_of_exists_multiset ⟨s, hs, mul_left_cancel₀ ha₂.ne_zero hprod⟩) hs
+        (mul_left_cancel₀ ha₂.ne_zero hprod))
+      right
+      exact ha₂
+      rcases h₂ with ⟨c, hc⟩
+      rw [hc, ← mul_assoc, mul_comm x a, mul_assoc] at hprod
+      exact hind x c (mem_closure_of_exists_multiset ⟨s, hs, mul_left_cancel₀ ha₂.ne_zero hprod⟩)
+        hs (mul_left_cancel₀ ha₂.ne_zero hprod)
 
 local notation "P" => { r : R | Prime r }
 local notation "S" => Submonoid.closure P
@@ -171,6 +168,30 @@ theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (h
   rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hT
   exact hT x ⟨H₃, Submonoid.subset_closure H₄⟩
 
+theorem exists_prime_factors_of_exists_multiset [CommMonoidWithZero R] (a : R)
+    (h : ∃ (l : Multiset R), ∃ (_ : ∀ y ∈ l, y ∈ {r | IsUnit r ∨ Prime r}), l.prod = a) :
+    ∃ (f : Multiset R), (∀ b ∈ f, Prime b) ∧ Associated f.prod a := by
+  rcases h with ⟨l ,hl, hl₂⟩
+  revert a hl hl₂
+  refine' l.induction (p := fun l => ∀ a, (∀ y ∈ l, y ∈ {r | IsUnit r ∨ Prime r}) →
+    l.prod = a → ∃ (f : Multiset R), (∀ b ∈ f, Prime b) ∧ Associated f.prod a) _ _
+  · simp only [Multiset.not_mem_zero, Set.mem_setOf_eq, IsEmpty.forall_iff, forall_const,
+      Multiset.prod_zero, forall_true_left, forall_eq']
+    use 0
+    simp only [Multiset.not_mem_zero, IsEmpty.forall_iff, forall_const, Multiset.prod_zero,
+      true_and]
+    exact Associated.refl 1
+  · simp only [Set.mem_setOf_eq, forall_apply_eq_imp_iff, Multiset.mem_cons, forall_eq_or_imp,
+      Multiset.prod_cons, and_imp, forall_apply_eq_imp_iff₂]
+    intros a s hind ha hs
+    rcases ha with ha₁ | ha₂
+    · rcases (hind hs) with ⟨f, hf, hf₂⟩
+      exact ⟨f, hf, (associated_isUnit_mul_right_iff ha₁).2 hf₂⟩
+    · rcases (hind hs) with ⟨f, hf, hf₂⟩
+      refine' ⟨f.cons a, Multiset.forall_mem_cons.2 ⟨ha₂, hf⟩, _⟩
+      rw [Multiset.prod_cons]
+      exact Associated.mul_left a hf₂
+
 /-- The other implication of Kaplansky's criterion (if every nonzero prime ideal of
 an integral domain R contains a prime element, then R is a UFD). -/
 theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
@@ -182,10 +203,13 @@ theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
   rcases Set.nonempty_iff_ne_empty.2 (ha₂ hP) with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
   rw [← hb, mul_comm] at hx₂
-  obtain ⟨z, hzmem, hass⟩ := submonoid.closure_exists_mem_of_prod_mem _ _ hx₂
-  obtain ⟨m, hprime, hprod⟩ := Submonoid.exists_multiset_of_mem_closure hzmem
-  refine' ⟨m, hprime, _⟩
-  rwa [hprod, Associated.comm]
+  have hsubset : Submonoid.closure {r : R | Prime r} ≤
+      Submonoid.closure {r : R | IsUnit r ∨ Prime r} := by
+    refine' Submonoid.closure_mono (Set.setOf_subset_setOf.2 (fun _ ha => _))
+    right
+    exact ha
+  exact exists_prime_factors_of_exists_multiset a (Submonoid.exists_multiset_of_mem_closure
+    (Submonoid.closure_mem_of_prod_mem _ _ (hsubset hx₂)))
 
 /-- Kaplansky's criterion (an integral domain R is a UFD if and only if every nonzero prime ideal
 contains a prime element). -/

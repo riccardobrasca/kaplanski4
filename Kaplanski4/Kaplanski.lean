@@ -97,6 +97,15 @@ end Basic
 
 section Kaplansky
 
+-- not necessary
+theorem mem_closure_of_exists_multiset {M : Type*} [CommMonoid M] {s : Set M} {x : M}
+    (hx : ∃ (l : Multiset M) (_ : ∀ y ∈ l, y ∈ s), l.prod = x) : x ∈ Submonoid.closure s := by
+  rcases hx with ⟨m, ⟨hm, hx⟩⟩
+  rw [← hx]
+  exact multiset_prod_mem m (fun a ha =>
+    Set.mem_of_subset_of_mem (Submonoid.subset_closure) (hm a ha))
+
+-- multiset_prod_mem
 open Submonoid in
 theorem Submonoid.closure_mem_of_prod_mem [CancelCommMonoidWithZero R] :
     ∀ x y, x * y ∈ closure { r : R | IsUnit r ∨ Prime r} →
@@ -132,6 +141,70 @@ theorem Submonoid.closure_mem_of_prod_mem [CancelCommMonoidWithZero R] :
       refine' hind x c _ hs (mul_left_cancel₀ ha₂.ne_zero hprod)
       rw [← mul_left_cancel₀ ha₂.ne_zero hprod]
       exact multiset_prod_mem _ _ (fun t ht => subset_closure (hs t ht))
+
+/-- A submonoid S of a monoid α is said to be divisor-closed if every divisor a ∈ α of some element
+b ∈ S lies in S.  -/
+def IsDivisorClosed [Monoid α] (S : Submonoid α) :=
+    ∀ a, (∃ b ∈ S, a ∣ b) → a ∈ S
+
+example [CancelCommMonoidWithZero R] :
+    IsDivisorClosed (Submonoid.closure {r : R | IsUnit r ∨ Prime r}) := by
+  suffices ∀ c ∈ Submonoid.closure {r | IsUnit r ∨ Prime r}, ∀ a,
+    (a ∣ c → a ∈ Submonoid.closure {r : R | IsUnit r ∨ Prime r}) by
+    rintro a ⟨b, hb⟩
+    exact this b hb.1 a hb.2
+  intro c hc
+  apply Submonoid.closure_induction
+    (p := fun c ↦ ∀ a, (a ∣ c → a ∈ Submonoid.closure {r | IsUnit r ∨ Prime r})) (x := c) hc
+  · intros x hx a ha
+    simp only [Set.mem_setOf_eq] at hx
+    rcases hx with h₁ | h₂
+    · have := isUnit_of_dvd_unit ha h₁
+      have ha₂ : a ∈ {r | IsUnit r ∨ Prime r} := by
+        simp only [Set.mem_setOf_eq]
+        left
+        exact this
+      exact Submonoid.subset_closure ha₂
+    · rw [← mul_one x] at ha
+      have := Prime.left_dvd_or_dvd_right_of_dvd_mul h₂ ha
+      rcases this with h₁ | h₂
+      rw [mul_one] at ha
+      rcases ha with ⟨k, hk⟩
+      rcases h₁ with ⟨k', hk'⟩
+      rw [hk', ← mul_one x, mul_assoc, mul_assoc] at hk
+      have := mul_left_cancel₀ (Prime.ne_zero h₂) hk
+      rw [one_mul] at this
+      have := isUnit_of_mul_eq_one k' k this.symm
+      refine' mem_closure_of_exists_multiset _
+      rw [← Multiset.prod_singleton k', ← Multiset.prod_cons] at hk'
+      use x ::ₘ {k'}
+      have : ∀ y ∈ x ::ₘ {k'}, y ∈ {r | IsUnit r ∨ Prime r} := by
+        intro t ht
+        simp only [Multiset.mem_cons, Multiset.mem_singleton] at ht
+        rcases ht with ht₁ | ht₂
+        · simp only [Set.mem_setOf_eq]
+          rw [← ht₁] at h₂
+          right
+          exact h₂
+        · simp only [Set.mem_setOf_eq]
+          rw [← ht₂] at this
+          left
+          exact this
+      use this
+      exact hk'.symm
+      have := isUnit_of_dvd_unit h₂ isUnit_one
+      have ha₂ : a ∈ {r | IsUnit r ∨ Prime r} := by
+        simp only [Set.mem_setOf_eq]
+        left
+        exact this
+      exact Submonoid.subset_closure ha₂
+  · intro a ha
+    have := isUnit_of_dvd_unit ha isUnit_one
+    have ha₂ : a ∈ {r | IsUnit r ∨ Prime r} := by
+        simp only [Set.mem_setOf_eq]
+        left
+        exact this
+    exact Submonoid.subset_closure ha₂
 
 local notation "P" => { r : R | Prime r }
 local notation "S" => Submonoid.closure P

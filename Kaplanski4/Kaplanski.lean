@@ -97,13 +97,6 @@ end Basic
 
 section Kaplansky
 
-theorem mem_closure_of_exists_multiset {M : Type*} [CommMonoid M] {s : Set M} {x : M}
-    (hx : ∃ (l : Multiset M) (_ : ∀ y ∈ l, y ∈ s), l.prod = x) : x ∈ Submonoid.closure s := by
-  rcases hx with ⟨m, ⟨hm, hx⟩⟩
-  rw [← hx]
-  exact multiset_prod_mem m (fun a ha =>
-    Set.mem_of_subset_of_mem (Submonoid.subset_closure) (hm a ha))
-
 open Submonoid in
 theorem Submonoid.closure_mem_of_prod_mem [CancelCommMonoidWithZero R] :
     ∀ x y, x * y ∈ closure { r : R | IsUnit r ∨ Prime r} →
@@ -113,33 +106,33 @@ theorem Submonoid.closure_mem_of_prod_mem [CancelCommMonoidWithZero R] :
   revert a b hm
   refine' m.induction (p := fun m ↦ ∀ a b, a * b ∈ closure {r | IsUnit r ∨ Prime r} →
     (∃ (_ : ∀ y ∈ m, y ∈ {r | IsUnit r ∨ Prime r}), m.prod = a * b) →
-    a ∈ closure {r | IsUnit r ∨ Prime r}) _ _
-  · simp only [Multiset.prod_zero, Multiset.not_mem_zero, Set.mem_setOf_eq, IsEmpty.forall_iff,
-      forall_const, exists_const]
-    refine' (fun _ _ _ hprod => subset_closure (Set.mem_def.2 _))
-    left
-    exact isUnit_of_mul_eq_one _ _ hprod.symm
-  · simp only [Set.mem_setOf_eq, exists_prop, and_imp, Multiset.prod_cons, Multiset.mem_cons,
-    forall_eq_or_imp]
+    a ∈ closure {r | IsUnit r ∨ Prime r}) ((fun _ _ _ hprod => subset_closure (Set.mem_def.2 _))) _
+  · left ; exact isUnit_of_mul_eq_one _ _ hprod.2.symm
+  · simp only [exists_prop, and_imp, Multiset.prod_cons, Multiset.mem_cons, forall_eq_or_imp]
     intros a s hind x y _ ha hs hprod
     rcases ha with ha₁ | ha₂
     · rcases ha₁.exists_right_inv with ⟨k, hk⟩
-      refine' hind x (y*k) (mem_closure_of_exists_multiset ⟨s, hs, _⟩) hs _
-      rw [← mul_one s.prod, ← hk, ← mul_assoc, mul_comm s.prod _, hprod, mul_assoc]
-      rw [← mul_one s.prod, ← hk, ← mul_assoc, mul_comm s.prod _, hprod, mul_assoc]
-    · rcases ha₂.dvd_mul.1 (Dvd.intro s.prod hprod) with h₁ | h₂
-      rcases h₁ with ⟨c, hc⟩
-      rw [hc]
-      rw [hc, mul_assoc] at hprod
-      refine' (closure {r | IsUnit r ∨ Prime r}).mul_mem (subset_closure (Set.mem_def.2 _))
-        (hind c y (mem_closure_of_exists_multiset ⟨s, hs, mul_left_cancel₀ ha₂.ne_zero hprod⟩) hs
-        (mul_left_cancel₀ ha₂.ne_zero hprod))
-      right
-      exact ha₂
-      rcases h₂ with ⟨c, hc⟩
-      rw [hc, ← mul_assoc, mul_comm x a, mul_assoc] at hprod
-      exact hind x c (mem_closure_of_exists_multiset ⟨s, hs, mul_left_cancel₀ ha₂.ne_zero hprod⟩)
-        hs (mul_left_cancel₀ ha₂.ne_zero hprod)
+      refine' hind x (y*k) _ hs _
+      rw [← mul_assoc, ← hprod, ← Multiset.prod_cons, mul_comm, ← Multiset.prod_cons]
+      refine' multiset_prod_mem _ _ (Multiset.forall_mem_cons.2 ⟨subset_closure (Set.mem_def.2 _),
+        Multiset.forall_mem_cons.2 ⟨subset_closure (Set.mem_def.2 _), (fun t ht =>
+        subset_closure (hs t ht))⟩⟩)
+      left ; exact isUnit_of_mul_eq_one_right _ _ hk
+      left ; exact ha₁
+      rw [← mul_one s.prod, ← hk, ← mul_assoc, ← mul_assoc, mul_eq_mul_right_iff,
+        mul_comm]
+      left ; exact hprod
+    · rcases ha₂.dvd_mul.1 (Dvd.intro _ hprod) with ⟨c, hc⟩ | ⟨c, hc⟩
+      rw [hc] ; rw [hc, mul_assoc] at hprod
+      refine' Submonoid.mul_mem _ (subset_closure (Set.mem_def.2 _))
+        (hind _ _ _ hs (mul_left_cancel₀ ha₂.ne_zero hprod))
+      right ; exact ha₂
+      rw [← mul_left_cancel₀ ha₂.ne_zero hprod]
+      exact multiset_prod_mem _ _ (fun t ht => subset_closure (hs t ht))
+      rw [hc, mul_comm x _, mul_assoc, mul_comm c _] at hprod
+      refine' hind x c _ hs (mul_left_cancel₀ ha₂.ne_zero hprod)
+      rw [← mul_left_cancel₀ ha₂.ne_zero hprod]
+      exact multiset_prod_mem _ _ (fun t ht => subset_closure (hs t ht))
 
 local notation "P" => { r : R | Prime r }
 local notation "S" => Submonoid.closure P

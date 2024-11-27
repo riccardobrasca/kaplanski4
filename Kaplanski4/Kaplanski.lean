@@ -1,4 +1,6 @@
-import Mathlib.RingTheory.PrincipalIdealDomain
+import Mathlib.Algebra.BigOperators.Associated
+import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
+import Mathlib.RingTheory.UniqueFactorizationDomain.Ideal
 
 variable {R : Type*}
 
@@ -32,8 +34,9 @@ theorem hypothesis_zorn_lemma [Semiring R] (S : Subsemigroup R) (hS : 0 ∉ S) (
 /-- The existence of a maximal element of 'Kaplansky.set S'
 (which we will use to prove Kaplansky's criterion). -/
 theorem exists_maximal_ideal [Semiring R] (S : Subsemigroup R) (hS : 0 ∉ S) :
-    ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P :=
-  zorn_partialOrder₀ (Kaplansky.set S) (hypothesis_zorn_lemma S hS)
+    ∃ P ∈ Kaplansky.set S, ∀ I ∈ Kaplansky.set S, P ≤ I → I = P := by
+  obtain ⟨P, hP⟩ := zorn_le₀ (Kaplansky.set S) (hypothesis_zorn_lemma S hS)
+  exact ⟨P, hP.1, fun I hI H ↦ le_antisymm (hP.2 hI H) H⟩
 
 end Existence
 
@@ -94,120 +97,10 @@ theorem isPrime_of_maximal [CommSemiring R] {P : Ideal R} {S : Subsemigroup R}
   ⟨ideal_neq_top hS hP, fun h => mem_or_mem_of_mul_mem _ _ hP hmax h⟩
 
 end Basic
-
 section Kaplansky
 
--- not necessary
-theorem mem_closure_of_exists_multiset {M : Type*} [CommMonoid M] {s : Set M} {x : M}
-    (hx : ∃ (l : Multiset M) (_ : ∀ y ∈ l, y ∈ s), l.prod = x) : x ∈ Submonoid.closure s := by
-  rcases hx with ⟨m, ⟨hm, hx⟩⟩
-  rw [← hx]
-  exact multiset_prod_mem m (fun a ha =>
-    Set.mem_of_subset_of_mem (Submonoid.subset_closure) (hm a ha))
-
--- multiset_prod_mem
-open Submonoid in
-theorem Submonoid.closure_mem_of_prod_mem [CancelCommMonoidWithZero R] :
-    ∀ x y, x * y ∈ closure { r : R | IsUnit r ∨ Prime r} →
-    x ∈ closure { r : R | IsUnit r ∨ Prime r} := by
-  intros a b hab
-  obtain ⟨m, hm⟩ := exists_multiset_of_mem_closure hab
-  revert a b hm
-  refine m.induction (p := fun m ↦ ∀ a b, a * b ∈ closure {r | IsUnit r ∨ Prime r} →
-    (∃ (_ : ∀ y ∈ m, y ∈ {r | IsUnit r ∨ Prime r}), m.prod = a * b) →
-    a ∈ closure {r | IsUnit r ∨ Prime r}) (fun _ _ _ hprod => subset_closure (Set.mem_def.2 ?_)) ?_
-  · left ; exact isUnit_of_mul_eq_one _ _ hprod.2.symm
-  · simp only [exists_prop, and_imp, Multiset.prod_cons, Multiset.mem_cons, forall_eq_or_imp]
-    intros _ s hind x y _ ha hs hprod
-    rcases ha with ha₁ | ha₂
-    · rcases ha₁.exists_right_inv with ⟨k, hk⟩
-      refine hind x (y*k) ?_ hs ?_
-      simp only [← mul_assoc, ← hprod, ← Multiset.prod_cons, mul_comm]
-      refine multiset_prod_mem _ _ (Multiset.forall_mem_cons.2 ⟨subset_closure (Set.mem_def.2 ?_),
-        Multiset.forall_mem_cons.2 ⟨subset_closure (Set.mem_def.2 ?_), (fun t ht =>
-        subset_closure (hs t ht))⟩⟩)
-      left ; exact isUnit_of_mul_eq_one_right _ _ hk
-      left ; exact ha₁
-      rw [← mul_one s.prod, ← hk, ← mul_assoc, ← mul_assoc, mul_eq_mul_right_iff, mul_comm]
-      left ; exact hprod
-    · rcases ha₂.dvd_mul.1 (Dvd.intro _ hprod) with ⟨c, hc⟩ | ⟨c, hc⟩
-      rw [hc] ; rw [hc, mul_assoc] at hprod
-      refine' Submonoid.mul_mem _ (subset_closure (Set.mem_def.2 _))
-        (hind _ _ _ hs (mul_left_cancel₀ ha₂.ne_zero hprod))
-      right ; exact ha₂
-      rw [← mul_left_cancel₀ ha₂.ne_zero hprod]
-      exact multiset_prod_mem _ _ (fun t ht => subset_closure (hs t ht))
-      rw [hc, mul_comm x _, mul_assoc, mul_comm c _] at hprod
-      refine' hind x c _ hs (mul_left_cancel₀ ha₂.ne_zero hprod)
-      rw [← mul_left_cancel₀ ha₂.ne_zero hprod]
-      exact multiset_prod_mem _ _ (fun t ht => subset_closure (hs t ht))
-
-/-- A submonoid S of a monoid α is said to be divisor-closed if every divisor a ∈ α of some element
-b ∈ S lies in S.  -/
-def IsDivisorClosed [Monoid α] (S : Submonoid α) :=
-    ∀ a, (∃ b ∈ S, a ∣ b) → a ∈ S
-
-example [CancelCommMonoidWithZero R] :
-    IsDivisorClosed (Submonoid.closure {r : R | IsUnit r ∨ Prime r}) := by
-  suffices ∀ c ∈ Submonoid.closure {r | IsUnit r ∨ Prime r}, ∀ a,
-    (a ∣ c → a ∈ Submonoid.closure {r : R | IsUnit r ∨ Prime r}) by
-    rintro a ⟨b, hb⟩
-    exact this b hb.1 a hb.2
-  intro c hc
-  apply Submonoid.closure_induction
-    (p := fun c ↦ ∀ a, (a ∣ c → a ∈ Submonoid.closure {r | IsUnit r ∨ Prime r})) (x := c) hc
-  · intros x hx a ha
-    simp only [Set.mem_setOf_eq] at hx
-    rcases hx with h₁ | h₂
-    · have := isUnit_of_dvd_unit ha h₁
-      have ha₂ : a ∈ {r | IsUnit r ∨ Prime r} := by
-        simp only [Set.mem_setOf_eq]
-        left
-        exact this
-      exact Submonoid.subset_closure ha₂
-    · rw [← mul_one x] at ha
-      have := Prime.left_dvd_or_dvd_right_of_dvd_mul h₂ ha
-      rcases this with h₁ | h₂
-      rw [mul_one] at ha
-      rcases ha with ⟨k, hk⟩
-      rcases h₁ with ⟨k', hk'⟩
-      rw [hk', ← mul_one x, mul_assoc, mul_assoc] at hk
-      have := mul_left_cancel₀ (Prime.ne_zero h₂) hk
-      rw [one_mul] at this
-      have := isUnit_of_mul_eq_one k' k this.symm
-      refine' mem_closure_of_exists_multiset _
-      rw [← Multiset.prod_singleton k', ← Multiset.prod_cons] at hk'
-      use x ::ₘ {k'}
-      have : ∀ y ∈ x ::ₘ {k'}, y ∈ {r | IsUnit r ∨ Prime r} := by
-        intro t ht
-        simp only [Multiset.mem_cons, Multiset.mem_singleton] at ht
-        rcases ht with ht₁ | ht₂
-        · simp only [Set.mem_setOf_eq]
-          rw [← ht₁] at h₂
-          right
-          exact h₂
-        · simp only [Set.mem_setOf_eq]
-          rw [← ht₂] at this
-          left
-          exact this
-      use this
-      exact hk'.symm
-      have := isUnit_of_dvd_unit h₂ isUnit_one
-      have ha₂ : a ∈ {r | IsUnit r ∨ Prime r} := by
-        simp only [Set.mem_setOf_eq]
-        left
-        exact this
-      exact Submonoid.subset_closure ha₂
-  · intro a ha
-    have := isUnit_of_dvd_unit ha isUnit_one
-    have ha₂ : a ∈ {r | IsUnit r ∨ Prime r} := by
-        simp only [Set.mem_setOf_eq]
-        left
-        exact this
-    exact Submonoid.subset_closure ha₂
-
-local notation "P" => { r : R | Prime r }
-local notation "S" => Submonoid.closure P
+local notation3 "P" => { r : R | Prime r }
+local notation3 "S" => Submonoid.closure P
 
 theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (ha : a ≠ 0)
     (H : ∀ (I : Ideal R) (_ : I ≠ ⊥) (_ : I.IsPrime), ∃ x ∈ I, Prime x)
@@ -264,7 +157,7 @@ theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
     (hP : (P : Set R).Nonempty) : UniqueFactorizationMonoid R := by
   refine' UniqueFactorizationMonoid.of_exists_prime_factors fun a ha => _
   have ha₂ := ideal.span_ne_mem_kaplanski.set ha H
-  rw [Kaplansky.set_def, ← Ne.def] at ha₂
+  rw [Kaplansky.set_def] at ha₂
   rcases Set.nonempty_iff_ne_empty.2 (ha₂ hP) with ⟨x, ⟨hx, hx₂⟩⟩
   cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
   rw [← hb, mul_comm] at hx₂
@@ -273,8 +166,10 @@ theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
     refine' Submonoid.closure_mono (Set.setOf_subset_setOf.2 (fun _ ha => _))
     right
     exact ha
-  exact exists_prime_factors_of_exists_multiset a (Submonoid.exists_multiset_of_mem_closure
-    (Submonoid.closure_mem_of_prod_mem _ _ (hsubset hx₂)))
+  refine exists_prime_factors_of_exists_multiset a ?_
+  obtain ⟨l, hl⟩ := Submonoid.exists_multiset_of_mem_closure
+    (divisor_closure_eq_closure _ _ (hsubset hx₂))
+  exact ⟨l, by simpa only [Set.mem_setOf_eq, exists_prop]⟩
 
 /-- Kaplansky's criterion (an integral domain R is a UFD if and only if every nonzero prime ideal
 contains a prime element). -/

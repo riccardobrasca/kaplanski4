@@ -161,7 +161,7 @@ theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
   rw [← hb, mul_comm] at hx₂
   have hsubset : Submonoid.closure {r : R | Prime r} ≤
       Submonoid.closure {r : R | IsUnit r ∨ Prime r} := by
-    refine' Submonoid.closure_mono (Set.setOf_subset_setOf.2 (fun _ ha ↦ _))
+    refine Submonoid.closure_mono (Set.setOf_subset_setOf.2 (fun _ ha ↦ ?_))
     right
     exact ha
   refine exists_prime_factors_of_exists_multiset a ?_

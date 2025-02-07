@@ -23,6 +23,11 @@ theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' (I.map (constantCoeff 
   convert this
   ring
 
+theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hPX : X ∈ I)
+    (hSP : span S = I.map (constantCoeff R)) :
+    I = span ((C R)'' S ∪ {X}) := by
+  sorry
+
 theorem foo {P : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hPX : X ∈ P)
     (hSP : span S = P.map (constantCoeff R)) [P.IsPrime] :
     ∃ T : Set R⟦X⟧, span T = I ∧ T.ncard = S.ncard + 1 := by

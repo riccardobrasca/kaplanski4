@@ -5,7 +5,7 @@ open PowerSeries Ideal
 
 variable {R : Type*} [CommRing R] (I : Ideal R⟦X⟧)
 
-theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' (I.map (constantCoeff R)) ≤ I := by
+theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' (I.map (constantCoeff R)) ⊆ I := by
   intro f ⟨r, hrI, hra⟩
   rw [SetLike.mem_coe, Ideal.mem_map_iff_of_surjective _ constantCoeff_surj] at hrI
   rcases hrI with ⟨g, hgI, hgr⟩

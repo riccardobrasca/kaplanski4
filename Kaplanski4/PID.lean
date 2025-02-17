@@ -1,12 +1,12 @@
 import Mathlib
-import Kaplanski4
 
 open PowerSeries Ideal
-open ideal
 
-variable {R : Type*} [CommRing R] (I : Ideal R⟦X⟧)
+variable {R : Type*} [CommRing R]
 
-theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' (I.map (constantCoeff R)) ⊆ I := by
+local notation I"⁰" => Ideal.map (constantCoeff R) I
+
+theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' I⁰ ⊆ I := by
   intro f ⟨r, hrI, hra⟩
   rw [SetLike.mem_coe, Ideal.mem_map_iff_of_surjective _ constantCoeff_surj] at hrI
   rcases hrI with ⟨g, hgI, hgr⟩
@@ -25,7 +25,7 @@ theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' (I.map (constantCoeff 
   ring
 
 theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hIX : X ∈ I)
-    (hSI : span S = I.map (constantCoeff R)) :
+    (hSI : span S = I⁰) :
     I = span ((C R)'' S ∪ {X}) := by
     ext f
     apply Iff.intro
@@ -46,10 +46,10 @@ theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hIX : X ∈ I)
 
 theorem foo {P : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hPX : X ∈ P)
     (hSP : span S = P.map (constantCoeff R)) [P.IsPrime] :
-    ∃ T : Set R⟦X⟧, span T = I ∧ T.ncard = S.ncard + 1 := by
+    ∃ T : Set R⟦X⟧, span T = P ∧ T.ncard = S.ncard + 1 := by
   sorry
 
 theorem foo' {P : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
     (hSP : span S = P.map (constantCoeff R)) [P.IsPrime] :
-    ∃ T : Set R⟦X⟧, span T = I ∧ T.ncard = S.ncard := by
+    ∃ T : Set R⟦X⟧, span T = P ∧ T.ncard = S.ncard := by
   sorry

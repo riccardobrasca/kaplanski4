@@ -2,6 +2,7 @@ import Mathlib
 import Kaplanski4
 
 open PowerSeries Ideal
+open ideal
 
 variable {R : Type*} [CommRing R] (I : Ideal R⟦X⟧)
 
@@ -23,10 +24,25 @@ theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' (I.map (constantCoeff 
   convert this
   ring
 
-theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hPX : X ∈ I)
-    (hSP : span S = I.map (constantCoeff R)) :
+theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hIX : X ∈ I)
+    (hSI : span S = I.map (constantCoeff R)) :
     I = span ((C R)'' S ∪ {X}) := by
-  sorry
+    ext f
+    apply Iff.intro
+    {
+      intros hf
+      simp
+      rw [mem_span_insert]
+      sorry
+    }
+    {
+      intros hf
+      rw [Set.union_singleton,mem_span_insert] at hf
+      rcases hf with ⟨a, z, hz, hf⟩
+      rw [hf]
+      have hzP: z ∈ I := by sorry
+      exact I.add_mem (mul_mem_left I a hIX) hzP
+    }
 
 theorem foo {P : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hPX : X ∈ P)
     (hSP : span S = P.map (constantCoeff R)) [P.IsPrime] :
@@ -37,6 +53,3 @@ theorem foo' {P : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
     (hSP : span S = P.map (constantCoeff R)) [P.IsPrime] :
     ∃ T : Set R⟦X⟧, span T = I ∧ T.ncard = S.ncard := by
   sorry
-
-example : ∀ x ∈ ({1, 2, 3} : Finset ℕ), x ≤ 4 := by
-  decide

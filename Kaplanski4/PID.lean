@@ -6,23 +6,23 @@ variable {R : Type*} [CommRing R]
 
 local notation I"⁰" => Ideal.map (constantCoeff R) I
 
+lemma mem_Izero_iff {I : Ideal R⟦X⟧} {x : R} : x ∈ I⁰ ↔ ∃ f ∈ I, constantCoeff R f = x :=
+  I.mem_map_iff_of_surjective _ constantCoeff_surj
+
+
 theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' I⁰ ⊆ I := by
   intro f ⟨r, hrI, hra⟩
-  rw [SetLike.mem_coe, Ideal.mem_map_iff_of_surjective _ constantCoeff_surj] at hrI
+  rw [SetLike.mem_coe, mem_Izero_iff] at hrI
   rcases hrI with ⟨g, hgI, hgr⟩
   rw [← hra, ← hgr]
-  let g' := mk fun p ↦ (coeff R (p + 1)) g
+
+  let g' := mk fun p ↦ coeff R (p + 1) g
   have hg' : g = X * g' + C R (constantCoeff R g) := eq_X_mul_shift_add_const g
-  have : span {X} ≤ I := by simpa [span_le]
-  have : X * g' ∈ I := by
-    apply this
-    apply mul_mem_right
-    apply subset_span
-    simp
+  have : X * g' ∈ I := I.mul_mem_right _ hI
   rw [hg'] at hgI
   have := Ideal.sub_mem _ hgI this
-  convert this
-  ring
+  simp at this
+  assumption
 
 theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hIX : X ∈ I)
     (hSI : span S = I⁰) :

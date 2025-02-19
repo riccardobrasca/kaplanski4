@@ -10,8 +10,11 @@ local notation f"⁰" => PowerSeries.constantCoeff R f
 lemma mem_Izero_iff {I : Ideal R⟦X⟧} {x : R} : x ∈ I⁰ ↔ ∃ f ∈ I, f⁰ = x :=
   I.mem_map_iff_of_surjective _ constantCoeff_surj
 
+lemma fzero_mem {I : Ideal R⟦X⟧} {f : R⟦X⟧} (hf : f ∈ I) : f⁰ ∈ I⁰ :=
+  mem_Izero_iff.2 ⟨f, hf, rfl⟩
 
-theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' I⁰ ⊆ I := by
+
+theorem Izero_subset_I {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' I⁰ ⊆ I := by
   intro f ⟨r, hrI, hra⟩
   rw [SetLike.mem_coe, mem_Izero_iff] at hrI
   rcases hrI with ⟨g, hgI, hgr⟩
@@ -20,44 +23,25 @@ theorem bar {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' I⁰ ⊆ I := by
   let g' := mk fun p ↦ coeff R (p + 1) g
   have hg' : g = X * g' + C R (g⁰) := eq_X_mul_shift_add_const g
   have hXg' : X * g' ∈ I := I.mul_mem_right _ hI
-  rw [hg'] at hgI
   have := I.sub_mem hgI hXg'
-  rw [add_sub_cancel_left] at this
+  rw [hg', add_sub_cancel_left] at this
   assumption
 
-theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hIX : X ∈ I) (hSI : span S = I⁰) :
+theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hXI : X ∈ I) (hSI : span S = I⁰) :
     I = span ((C R)'' S ∪ {X}) := by
   ext f
+  rw [Set.union_singleton, mem_span_insert, ← map_span, hSI]
   apply Iff.intro
-  · intros hf
-    rw [Set.union_singleton, mem_span_insert]
+  · intro hf
     use mk fun p ↦ coeff R (p + 1) f
     use C R (f⁰)
-    apply And.intro
-    · rw [← map_span]
-      apply mem_map_of_mem _
-      rw [hSI]
-      exact mem_Izero_iff.2 ⟨f, hf, rfl⟩
-    · exact eq_shift_mul_X_add_const f
-
-  · intros hf
-    rw [Set.union_singleton, mem_span_insert] at hf
-    rcases hf with ⟨a, z, hz, hf⟩
+    exact ⟨mem_map_of_mem _ (fzero_mem hf), eq_shift_mul_X_add_const f⟩
+  · rintro ⟨a, z, hz, hf⟩
     rw [hf]
-    have hzP: z ∈ I := by
-      have : S ⊆ I⁰ := span_le.1 hSI.le
-      have : (C R)'' S ⊆ (C R)'' (I⁰) := Set.image_mono this
-      have : (C R)'' S ⊆ I := subset_trans this (bar hIX)
-      rw [← I.span_le] at this
-      exact this hz
-    exact I.add_mem (mul_mem_left I a hIX) hzP
+    exact I.add_mem (I.mul_mem_left _ hXI) (span_le.2 (Izero_subset_I hXI) hz)
 
-theorem foo {P : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hPX : X ∈ P)
-    (hSP : span S = P.map (constantCoeff R)) [P.IsPrime] :
-    ∃ T : Set R⟦X⟧, span T = P ∧ T.ncard = S.ncard + 1 := by
-  sorry
 
-theorem foo' {P : Ideal R⟦X⟧} {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
-    (hSP : span S = P.map (constantCoeff R)) [P.IsPrime] :
+theorem foo' {P : Ideal R⟦X⟧} {S : Set R} [P.IsPrime] (hS : S.Finite) (hXP : X ∉ P)
+    (hSP : span S = P⁰) :
     ∃ T : Set R⟦X⟧, span T = P ∧ T.ncard = S.ncard := by
   sorry

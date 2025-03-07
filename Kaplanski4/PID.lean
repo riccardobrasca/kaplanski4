@@ -43,7 +43,7 @@ variable {P : Ideal R⟦X⟧} [P.IsPrime] {k : ℕ} (f : Fin k → R⟦X⟧)
 
 section stuff
 
-variable {g : R⟦X⟧} (hg : g ∈ P) [NeZero k]
+variable {g : R⟦X⟧} (hg : g ∈ P)
 
 noncomputable
 def r {g : R⟦X⟧} (hg : g ∈ P) (hSP : span (range (constantCoeff R ∘ f)) = P⁰) : Fin k → R :=

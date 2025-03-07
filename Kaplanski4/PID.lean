@@ -1,6 +1,6 @@
 import Mathlib
 
-open PowerSeries Ideal
+open PowerSeries Ideal Set BigOperators
 
 variable {R : Type*} [CommRing R]
 
@@ -12,7 +12,6 @@ lemma mem_Izero_iff {I : Ideal R⟦X⟧} {x : R} : x ∈ I⁰ ↔ ∃ f ∈ I, f
 
 lemma fzero_mem {I : Ideal R⟦X⟧} {f : R⟦X⟧} (hf : f ∈ I) : f⁰ ∈ I⁰ :=
   mem_Izero_iff.2 ⟨f, hf, rfl⟩
-
 
 theorem Izero_subset_I {I : Ideal R⟦X⟧} (hI : X ∈ I) : (C R)'' I⁰ ⊆ I := by
   intro f ⟨r, hrI, hra⟩
@@ -40,7 +39,52 @@ theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hXI : X ∈ I) (hSI : span S = I�
     rw [hf]
     exact I.add_mem (I.mul_mem_left _ hXI) (span_le.2 (Izero_subset_I hXI) hz)
 
+variable {P : Ideal R⟦X⟧} [P.IsPrime] {k : ℕ} (f : Fin k → R⟦X⟧)
 
-theorem foo' {P : Ideal R⟦X⟧} {S : Set R} [P.IsPrime] (hS : S.Finite) (hXP : X ∉ P)
-    (hSP : span S = P⁰) : P = span ((C R)'' S) := by
+section stuff
+
+variable {g : R⟦X⟧} (hg : g ∈ P) [NeZero k]
+
+noncomputable
+def r {g : R⟦X⟧} (hg : g ∈ P) (hSP : span (range (constantCoeff R ∘ f)) = P⁰) : Fin k → R :=
+  ((mem_span_range_iff_exists_fun R).1 (hSP ▸ fzero_mem hg)).choose
+
+-- normalement rien à faire
+lemma hr (hSP : span (range (constantCoeff R ∘ f)) = P⁰) :
+    ∑ i : Fin k, (r f hg hSP i) * ((constantCoeff R ∘ f) i) = constantCoeff R g := by
+  sorry
+
+-- existence de g'
+lemma hr1 (hSP : span (range (constantCoeff R ∘ f)) = P⁰) :
+    ∃ g' ∈ P, g - (∑ i : Fin k, (r f hg hSP i) • (f i)) = X * g' := by
+  sorry
+
+noncomputable
+def G' (hSP : span (range (constantCoeff R ∘ f)) = P⁰) : ℕ → P
+| 0 => ⟨g, hg⟩
+| n+1 => ⟨_, (hr1 f (G' hSP n).2 hSP).choose_spec.1⟩
+
+noncomputable
+def G (hSP : span (range (constantCoeff R ∘ f)) = P⁰) : Fin k → R⟦X⟧ := fun i ↦
+  PowerSeries.mk (fun n ↦ r f (G' f hg hSP n).2 hSP i)
+
+lemma coeffG (hSP : span (range (constantCoeff R ∘ f)) = P⁰) (i : Fin k) (n : ℕ) :
+    coeff R n (G f hg hSP i) = r f (G' f hg hSP n).2 hSP i := by
+  simp [G]
+
+-- partie la plus intéressante
+lemma hG (hSP : span (range (constantCoeff R ∘ f)) = P⁰) :
+    ∑ i : Fin k, G f hg hSP i = g := by
+  ext n
+  simp_rw [map_sum, coeffG f hg hSP]
+  sorry
+
+end stuff
+
+--faire l'autre inclusion
+
+theorem foo (hXP : X ∉ P) (hSP : span (range (constantCoeff R ∘ f)) = P⁰) :
+    P ≤ span ((C R)'' range (constantCoeff R ∘ f)) := by
+  let a : Fin k → R := constantCoeff R ∘ f
+  intro g hg
   sorry

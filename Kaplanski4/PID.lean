@@ -42,6 +42,5 @@ theorem bar' {I : Ideal R⟦X⟧} {S : Set R} (hXI : X ∈ I) (hSI : span S = I�
 
 
 theorem foo' {P : Ideal R⟦X⟧} {S : Set R} [P.IsPrime] (hS : S.Finite) (hXP : X ∉ P)
-    (hSP : span S = P⁰) :
-    ∃ T : Set R⟦X⟧, span T = P ∧ T.ncard = S.ncard := by
+    (hSP : span S = P⁰) : P = span ((C R)'' S) := by
   sorry

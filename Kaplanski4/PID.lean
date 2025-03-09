@@ -33,7 +33,7 @@ theorem Izero_subset_I : (C R)'' I⁰ ⊆ I := by
   rw [hg', add_sub_cancel_left] at this
   assumption
 
-theorem bar' {S : Set R} (hSI : span S = I⁰) : I = span ((C R)'' S ∪ {X}) := by
+theorem bar {S : Set R} (hSI : span S = I⁰) : I = span ((C R)'' S ∪ {X}) := by
   ext f
   rw [Set.union_singleton, mem_span_insert, ← map_span, hSI]
   apply Iff.intro
@@ -52,47 +52,54 @@ section X_not_mem_P
 
 -- Pourquoi utiliser la notation P⁰ dans la définition de hfP casse tout ?
 variable
-  {k : ℕ} {f : Fin k → R⟦X⟧} (hfP : P.map (constantCoeff R) = span (range (constantCoeff R ∘ f)))
-  {g : R⟦X⟧} (hg : g ∈ P)
   (hP : X ∉ P)
+  {k : ℕ} {a : Fin k → R} (haP : P.map (constantCoeff R) = span (range a))
+  {g : R⟦X⟧} (hg : g ∈ P)
+include haP
 
-def exists_r := (mem_span_range_iff_exists_fun R).1 (hfP ▸ fzero_mem hg)
+section f
+omit [P.IsPrime]
+lemma exists_f i : ∃ f ∈ P, f⁰ = a i:= mem_Izero_iff.1 (haP ▸ subset_span (Set.mem_range_self i))
+noncomputable def f i := (exists_f haP i).choose
+lemma f_mem_P i : f haP i ∈ P := (exists_f haP i).choose_spec.1
+lemma hfa i : (f haP i)⁰ = a i := (exists_f haP i).choose_spec.2
+end f
 
-noncomputable
-def r : Fin k → R := (exists_r hfP hg).choose
-
-omit [P.IsPrime] in
-lemma hr : ∑ i : Fin k, (r hfP hg) i * constantCoeff R (f i) = constantCoeff R g := by
-  simp [r, ← (exists_r hfP hg).choose_spec]
+def exists_r := (mem_span_range_iff_exists_fun R).1 (haP ▸ fzero_mem hg)
+noncomputable def r : Fin k → R := (exists_r haP hg).choose
+omit [P.IsPrime] in lemma hr : ∑ i, (r haP hg) i * a i = g⁰ := (exists_r haP hg).choose_spec
 
 noncomputable
 def g' : ℕ → P
 | 0 => ⟨g, hg⟩
 | n + 1 => by
-  let g'n := (g' n).1
-  let hg'n := (g' n).2
-  have := sub_const_eq_X_mul_shift (g'n - ∑ i : Fin k, r hfP hg'n i • f i)
-  simp [hr hfP hg'n, g'n] at this
-  use mk fun p ↦ coeff R (p + 1) g'n - ∑ i : Fin k, r hfP hg'n i * coeff R (p + 1) (f i)
-  have sum_f_mem_P : ∑ i : Fin k, r hfP hg'n i • f i ∈ P := P.sum_mem sorry
-  exact Or.resolve_left (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem hg'n sum_f_mem_P)) hP
-
-example (n : ℕ) : (g' hfP hg hP n).1 - ∑ i : Fin k, r hfP (g' hfP hg hP n).2 i • f i = X * (g' hfP hg hP (n + 1)).1 := by
-  have := sub_const_eq_X_mul_shift ((g' hfP hg hP n).1 - ∑ i : Fin k, r hfP (g' hfP hg hP n).2 i • f i)
-  simp [hr hfP (g' hfP hg hP n).2, g'] at this
-  simp [this, g']
+  have := sub_const_eq_X_mul_shift ((g' n).1 - ∑ i, C R (r haP (g' n).2 i) * f haP i)
+  simp [hr haP (g' n).2, hfa] at this
+  have hf : ∑ i, C R (r haP (g' n).2 i) * f haP i ∈ P :=
+    P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P haP i)
+  have := Or.resolve_left (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem (g' n).2 hf)) hP
+  exact ⟨_, this⟩
 
 noncomputable
-def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r hfP (g' hfP hg hP n).2 i
+def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r haP (g' hP haP hg n).2 i
 
-set_option pp.proofs true
 -- partie la plus intéressante
-lemma sum_h_eq_g : ∑ i : Fin k, (h hfP hg hP) i * f i = g := by
+lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
   ext n
-  simp [coeff_mul, h, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
-  sorry
+  simp
+  induction n with
+  | zero => simp [h, hfa, hr, g']
+  | succ n hrec =>
+    simp [h, coeff_mul] at hrec ⊢
+    sorry
 
-theorem foo : P = span ((C R)'' range (constantCoeff R ∘ f)) := by
-  sorry
+include hP in
+theorem foo : P = span (range (f haP)) := by
+  rw [le_antisymm_iff]
+  constructor
+  · intro g hg
+    exact (mem_span_range_iff_exists_fun R⟦X⟧).2 ⟨_, sum_h_eq_g hP haP hg⟩
+  · rw [span_le, Set.range_subset_iff]
+    exact f_mem_P haP
 
 end X_not_mem_P

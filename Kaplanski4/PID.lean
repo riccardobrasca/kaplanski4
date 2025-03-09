@@ -65,19 +65,22 @@ omit [P.IsPrime] in
 lemma hr : ∑ i : Fin k, (r hfP hg) i * constantCoeff R (f i) = constantCoeff R g := by
   simp [r, ← (exists_r hfP hg).choose_spec]
 
--- existence de g'
-include hP in
-lemma exists_g' : ∃ g' ∈ P, g - ∑ i : Fin k, (r hfP hg) i • f i = X * g' := by
-  have this := sub_const_eq_X_mul_shift (g - ∑ i : Fin k, (r hfP hg) i • f i)
-  simp [← hr hfP hg] at this
-  refine ⟨_, ?_, this⟩
-  have sum_f_mem_P : ∑ i : Fin k, (r hfP hg) i • f i ∈ P := sorry
-  exact Or.resolve_left (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem hg sum_f_mem_P)) hP
-
 noncomputable
 def g' : ℕ → P
 | 0 => ⟨g, hg⟩
-| n + 1 => ⟨_, (exists_g' hfP (g' n).2 hP).choose_spec.1⟩
+| n + 1 => by
+  let g'n := (g' n).1
+  let hg'n := (g' n).2
+  have := sub_const_eq_X_mul_shift (g'n - ∑ i : Fin k, r hfP hg'n i • f i)
+  simp [hr hfP hg'n, g'n] at this
+  use mk fun p ↦ coeff R (p + 1) g'n - ∑ i : Fin k, r hfP hg'n i * coeff R (p + 1) (f i)
+  have sum_f_mem_P : ∑ i : Fin k, r hfP hg'n i • f i ∈ P := P.sum_mem sorry
+  exact Or.resolve_left (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem hg'n sum_f_mem_P)) hP
+
+example (n : ℕ) : (g' hfP hg hP n).1 - ∑ i : Fin k, r hfP (g' hfP hg hP n).2 i • f i = X * (g' hfP hg hP (n + 1)).1 := by
+  have := sub_const_eq_X_mul_shift ((g' hfP hg hP n).1 - ∑ i : Fin k, r hfP (g' hfP hg hP n).2 i • f i)
+  simp [hr hfP (g' hfP hg hP n).2, g'] at this
+  simp [this, g']
 
 noncomputable
 def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r hfP (g' hfP hg hP n).2 i
@@ -86,18 +89,10 @@ set_option pp.proofs true
 -- partie la plus intéressante
 lemma sum_h_eq_g : ∑ i : Fin k, (h hfP hg hP) i * f i = g := by
   ext n
-  induction n with
-  | zero => simp [h, g', hr]
-  | succ n hrec =>
-
-    sorry
-
-/-
-
---faire l'autre inclusion
-theorem foo : P = span ((C R)'' range (constantCoeff R ∘ f)) := by
-  let a : Fin k → R := constantCoeff R ∘ f
-  intro g hg
+  simp [coeff_mul, h, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
   sorry
--/
+
+theorem foo : P = span ((C R)'' range (constantCoeff R ∘ f)) := by
+  sorry
+
 end X_not_mem_P

@@ -1,18 +1,21 @@
 import Mathlib
+import Kaplanski4
+set_option pp.proofs true
 
 open PowerSeries Ideal Set BigOperators
 
 variable {R : Type*} [CommRing R] {I P : Ideal R⟦X⟧} [P_prime : P.IsPrime]
 
+
 -- Usefull notation
 local notation I"⁰" => Ideal.map (constantCoeff R) I
 local notation f"⁰" => PowerSeries.constantCoeff R f
 
-lemma mem_Izero_iff {I : Ideal R⟦X⟧} {x : R} : x ∈ I⁰ ↔ ∃ f ∈ I, f⁰ = x :=
+lemma mem_I0_iff {I : Ideal R⟦X⟧} {x : R} : x ∈ I⁰ ↔ ∃ f ∈ I, f⁰ = x :=
   I.mem_map_iff_of_surjective _ constantCoeff_surj
 
-lemma fzero_mem {I : Ideal R⟦X⟧} {f : R⟦X⟧} (hf : f ∈ I) : f⁰ ∈ I⁰ :=
-  mem_Izero_iff.2 ⟨f, hf, rfl⟩
+lemma f0_mem {I : Ideal R⟦X⟧} {f : R⟦X⟧} (hf : f ∈ I) : f⁰ ∈ I⁰ :=
+  mem_I0_iff.2 ⟨f, hf, rfl⟩
 
 
 section X_mem_I
@@ -20,9 +23,9 @@ section X_mem_I
 variable (hXI : X ∈ I)
 include hXI
 
-theorem Izero_subset_I : (C R)'' I⁰ ⊆ I := by
+theorem I0_subset_I : (C R)'' I⁰ ⊆ I := by
   intro f ⟨r, hrI, hra⟩
-  rw [SetLike.mem_coe, mem_Izero_iff] at hrI
+  rw [SetLike.mem_coe, mem_I0_iff] at hrI
   rcases hrI with ⟨g, hgI, hgr⟩
   rw [← hra, ← hgr]
 
@@ -40,10 +43,10 @@ theorem bar {S : Set R} (hSI : span S = I⁰) : I = span ((C R)'' S ∪ {X}) := 
   · intro hf
     use mk fun p ↦ coeff R (p + 1) f
     use C R (f⁰)
-    exact ⟨mem_map_of_mem _ (fzero_mem hf), eq_shift_mul_X_add_const f⟩
+    exact ⟨mem_map_of_mem _ (f0_mem hf), eq_shift_mul_X_add_const f⟩
   · rintro ⟨a, z, hz, hf⟩
     rw [hf]
-    exact I.add_mem (I.mul_mem_left _ hXI) (span_le.2 (Izero_subset_I hXI) hz)
+    exact I.add_mem (I.mul_mem_left _ hXI) (span_le.2 (I0_subset_I hXI) hz)
 
 end X_mem_I
 
@@ -57,15 +60,16 @@ variable
   {g : R⟦X⟧} (hg : g ∈ P)
 include haP
 
-section f
+
+section f_k
 omit [P.IsPrime]
-lemma exists_f i : ∃ f ∈ P, f⁰ = a i:= mem_Izero_iff.1 (haP ▸ subset_span (Set.mem_range_self i))
+lemma exists_f i : ∃ f ∈ P, f⁰ = a i:= mem_I0_iff.1 (haP ▸ subset_span (Set.mem_range_self i))
 noncomputable def f i := (exists_f haP i).choose
 lemma f_mem_P i : f haP i ∈ P := (exists_f haP i).choose_spec.1
 lemma hfa i : (f haP i)⁰ = a i := (exists_f haP i).choose_spec.2
-end f
+end f_k
 
-def exists_r := (mem_span_range_iff_exists_fun R).1 (haP ▸ fzero_mem hg)
+def exists_r := (mem_span_range_iff_exists_fun R).1 (haP ▸ f0_mem hg)
 noncomputable def r : Fin k → R := (exists_r haP hg).choose
 omit [P.IsPrime] in lemma hr : ∑ i, (r haP hg) i * a i = g⁰ := (exists_r haP hg).choose_spec
 
@@ -103,3 +107,21 @@ theorem foo : P = span (range (f haP)) := by
     exact f_mem_P haP
 
 end X_not_mem_P
+
+
+
+section Kaplansky13_6
+
+theorem Kaplansky13_6 [IsPrincipalIdealRing R] [IsDomain R]  :
+    UniqueFactorizationMonoid R⟦X⟧ :=  by
+  apply (uniqueFactorizationMonoid_iff sorry).2
+  intro P P_ne_bot P_prime
+  by_cases hxP : X ∈ P
+  · exact ⟨X, hxP, X_prime⟩
+  · sorry
+
+
+
+
+
+end Kaplansky13_6

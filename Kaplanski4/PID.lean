@@ -98,26 +98,22 @@ lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
     sorry
 
 include hP in
-theorem foo : P = span (range (f haP)) := by
-  rw [le_antisymm_iff]
-  constructor
-  · intro g hg
-    exact (mem_span_range_iff_exists_fun R⟦X⟧).2 ⟨_, sum_h_eq_g hP haP hg⟩
-  · rw [span_le, Set.range_subset_iff]
-    exact f_mem_P haP
+theorem foo : P = span (range (f haP)) :=
+  le_antisymm_iff.2
+    ⟨fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g hP haP hg⟩,
+    span_le.2 (Set.range_subset_iff.2 (f_mem_P haP))⟩
 
 end X_not_mem_P
-
 
 
 section Kaplansky13_6
 
 theorem Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
     UniqueFactorizationMonoid R⟦X⟧ :=  by
-  apply (uniqueFactorizationMonoid_iff ⟨X, X_prime⟩).2
+  apply (uniqueFactorizationMonoid_iff ⟨_, X_prime⟩).2
   intro P P_ne_bot P_prime
   by_cases hxP : X ∈ P
-  · exact ⟨X, hxP, X_prime⟩
+  · exact ⟨_, hxP, X_prime⟩
   · obtain ⟨a, ha⟩ := (principal_R.principal (P⁰)).principal'
     let a' (_ : Fin 1) := a
     have haP : P⁰ = span (range a') := by simp [ha, a']

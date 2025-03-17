@@ -114,7 +114,7 @@ section Kaplansky13_6
 
 theorem Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
     UniqueFactorizationMonoid R⟦X⟧ :=  by
-  apply (uniqueFactorizationMonoid_iff sorry).2
+  apply (uniqueFactorizationMonoid_iff ⟨X, X_prime⟩).2
   intro P P_ne_bot P_prime
   by_cases hxP : X ∈ P
   · exact ⟨X, hxP, X_prime⟩

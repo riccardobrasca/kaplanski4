@@ -110,18 +110,23 @@ end X_not_mem_P
 
 
 
+#check foo
 section Kaplansky13_6
 
-theorem Kaplansky13_6 [IsPrincipalIdealRing R] [IsDomain R]  :
+theorem Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
     UniqueFactorizationMonoid R⟦X⟧ :=  by
   apply (uniqueFactorizationMonoid_iff sorry).2
   intro P P_ne_bot P_prime
   by_cases hxP : X ∈ P
   · exact ⟨X, hxP, X_prime⟩
-  · sorry
-
-
-
+  · obtain ⟨a, ha⟩ := (principal_R.principal (P⁰)).principal'
+    let a' (_ : Fin 1) := a
+    have : P⁰ = span (range a') := by simp [ha, a']
+    have ciao := foo hxP this
+    have truc : range (f this) = {f this 0} := by simp [Fin.range_fin_succ]
+    rw [truc] at ciao
+    have f_ne_0 : f this 0 ≠ 0 := span_singleton_eq_bot.not.1 (ciao ▸ P_ne_bot)
+    exact ⟨f this 0, f_mem_P this 0, (span_singleton_prime f_ne_0).1 (ciao ▸ P_prime)⟩
 
 
 end Kaplansky13_6

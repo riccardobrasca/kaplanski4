@@ -110,7 +110,6 @@ end X_not_mem_P
 
 
 
-#check foo
 section Kaplansky13_6
 
 theorem Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
@@ -121,12 +120,10 @@ theorem Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
   · exact ⟨X, hxP, X_prime⟩
   · obtain ⟨a, ha⟩ := (principal_R.principal (P⁰)).principal'
     let a' (_ : Fin 1) := a
-    have : P⁰ = span (range a') := by simp [ha, a']
-    have ciao := foo hxP this
-    have truc : range (f this) = {f this 0} := by simp [Fin.range_fin_succ]
-    rw [truc] at ciao
-    have f_ne_0 : f this 0 ≠ 0 := span_singleton_eq_bot.not.1 (ciao ▸ P_ne_bot)
-    exact ⟨f this 0, f_mem_P this 0, (span_singleton_prime f_ne_0).1 (ciao ▸ P_prime)⟩
+    have haP : P⁰ = span (range a') := by simp [ha, a']
+    have P_span_f : P = span {f haP 0} := by simp [foo hxP haP, Fin.range_fin_succ]
+    have f_ne_0 : f haP 0 ≠ 0 := span_singleton_eq_bot.not.1 (P_span_f ▸ P_ne_bot)
+    exact ⟨f haP 0, f_mem_P haP 0, (span_singleton_prime f_ne_0).1 (P_span_f ▸ P_prime)⟩
 
 
 end Kaplansky13_6

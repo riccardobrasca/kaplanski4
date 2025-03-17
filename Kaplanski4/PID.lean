@@ -98,7 +98,7 @@ lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
     sorry
 
 include hP in
-theorem foo : P = span (range (f haP)) :=
+theorem P_eq_span_range : P = span (range (f haP)) :=
   le_antisymm_iff.2
     ⟨fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g hP haP hg⟩,
     span_le.2 (Set.range_subset_iff.2 (f_mem_P haP))⟩
@@ -117,7 +117,7 @@ theorem Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
   · obtain ⟨a, ha⟩ := (principal_R.principal (P⁰)).principal'
     let a' (_ : Fin 1) := a
     have haP : P⁰ = span (range a') := by simp [ha, a']
-    have P_span_f : P = span {f haP 0} := by simp [foo hxP haP, Fin.range_fin_succ]
+    have P_span_f : P = span {f haP 0} := by simp [P_eq_span_range hxP haP, Fin.range_fin_succ]
     have f_ne_0 : f haP 0 ≠ 0 := span_singleton_eq_bot.not.1 (P_span_f ▸ P_ne_bot)
     exact ⟨f haP 0, f_mem_P haP 0, (span_singleton_prime f_ne_0).1 (P_span_f ▸ P_prime)⟩
 

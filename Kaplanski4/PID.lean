@@ -20,8 +20,8 @@ end PowerSeries
 
 end for_mathlib
 
-variable {R : Type*} [CommRing R] {I P : Ideal R⟦X⟧} [P_prime : P.IsPrime]
 
+variable {R : Type*} [CommRing R] {I P : Ideal R⟦X⟧} [P_prime : P.IsPrime]
 
 -- Usefull notation
 local notation I"⁰" => Ideal.map (constantCoeff R) I
@@ -57,8 +57,7 @@ theorem bar {S : Set R} (hSI : span S = I⁰) : I = span ((C R)'' S ∪ {X}) := 
   rw [Set.union_singleton, mem_span_insert, ← map_span, hSI]
   apply Iff.intro
   · intro hf
-    use mk fun p ↦ coeff R (p + 1) f
-    use C R (f⁰)
+    use mk fun p ↦ coeff R (p + 1) f, C R (f⁰)
     exact ⟨mem_map_of_mem _ (f0_mem hf), eq_shift_mul_X_add_const f⟩
   · rintro ⟨a, z, hz, hf⟩
     rw [hf]
@@ -82,7 +81,7 @@ include haP
 
 section f_k
 omit [P.IsPrime]
-lemma exists_f i : ∃ f ∈ P, f⁰ = a i:= mem_I0_iff.1 (haP ▸ subset_span (Set.mem_range_self i))
+lemma exists_f i : ∃ f ∈ P, f⁰ = a i := mem_I0_iff.1 (haP ▸ subset_span (Set.mem_range_self i))
 noncomputable def f i := (exists_f haP i).choose
 lemma f_mem_P i : f haP i ∈ P := (exists_f haP i).choose_spec.1
 lemma hfa i : (f haP i)⁰ = a i := (exists_f haP i).choose_spec.2
@@ -96,13 +95,12 @@ noncomputable
 def g' : ℕ → P
 | 0 => ⟨g, hg⟩
 | n + 1 =>
-    ⟨mk fun p ↦ (coeff R (p + 1)) (g' n) -
-      ∑ x : Fin k, r haP (g' n).2 x * (coeff R (p + 1)) (f haP x), by
-  have := sub_const_eq_X_mul_shift ((g' n).1 - ∑ i, C R (r haP (g' n).2 i) * f haP i)
-  simp [hr haP (g' n).2, hfa] at this
-  have hf : ∑ i, C R (r haP (g' n).2 i) * f haP i ∈ P :=
-    P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P haP i)
-  exact Or.resolve_left (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem (g' n).2 hf)) hP⟩
+  ⟨mk fun p ↦ coeff R (p + 1) (g' n) - ∑ i, r haP (g' n).2 i * coeff R (p + 1) (f haP i), by
+    have := sub_const_eq_X_mul_shift ((g' n).1 - ∑ i, C R (r haP (g' n).2 i) * f haP i)
+    simp [hr haP (g' n).2, hfa] at this
+    have hf : ∑ i, C R (r haP (g' n).2 i) * f haP i ∈ P :=
+      P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P haP i)
+    exact Or.resolve_left (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem (g' n).2 hf)) hP⟩
 
 lemma hg' (n : ℕ) : (g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i =
     X * (g' hP haP hg (n + 1)).1 := by
@@ -121,9 +119,9 @@ lemma key (n : ℕ) : g - ∑ i, trunc n ((h hP haP hg) i) * f haP i = X ^ n * (
       enter [1, 2, 2, i]
       rw [trunc_succ, Polynomial.coe_add, Polynomial.coe_monomial, add_mul, ← mul_one (coeff R n _),
         ← smul_eq_mul (a' := 1), map_smul, ← X_pow_eq, smul_eq_C_mul, mul_comm _ (X ^ n), mul_assoc]
-    rw [sum_add_distrib, sub_add_eq_sub_sub, H, ← mul_sum, ← mul_sub, pow_succ, mul_assoc,
-    ← hg' hP haP hg n]
-    simp [h]
+    rw [sum_add_distrib, sub_add_eq_sub_sub, H, ← mul_sum, ← mul_sub]
+    simp [h, hg']
+    ring
 
 -- partie la plus intéressante
 lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
@@ -132,14 +130,14 @@ lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
   conv =>
     enter [1, 2, 2, 2, i]
     rw [eq_trunc_add_X_pow_mul (h hP haP hg i) (n + 1), add_mul, mul_assoc]
-  simp [sum_add_distrib, ← mul_sum, sub_add_eq_sub_sub, key hP haP hg, ← mul_sub,
-    coeff_X_pow_mul']
+  rw [sum_add_distrib, sub_add_eq_sub_sub, key, ← mul_sum]
+  simp [coeff_X_pow_mul']
 
 include hP in
 theorem P_eq_span_range : P = span (range (f haP)) :=
-  le_antisymm_iff.2
-    ⟨fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g hP haP hg⟩,
-    span_le.2 (Set.range_subset_iff.2 (f_mem_P haP))⟩
+  le_antisymm
+    (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g hP haP hg⟩)
+    (span_le.2 (Set.range_subset_iff.2 (f_mem_P haP)))
 
 end X_not_mem_P
 
@@ -158,6 +156,5 @@ theorem Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
     have P_span_f : P = span {f haP 0} := by simp [P_eq_span_range hxP haP, Fin.range_fin_succ]
     have f_ne_0 : f haP 0 ≠ 0 := span_singleton_eq_bot.not.1 (P_span_f ▸ P_ne_bot)
     exact ⟨f haP 0, f_mem_P haP 0, (span_singleton_prime f_ne_0).1 (P_span_f ▸ P_prime)⟩
-
 
 end Kaplansky13_6

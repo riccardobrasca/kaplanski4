@@ -2,7 +2,23 @@ import Mathlib
 import Kaplanski4
 set_option pp.proofs true
 
-open PowerSeries Ideal Set BigOperators
+open PowerSeries Ideal Set BigOperators Finset
+
+section for_mathlib
+
+namespace PowerSeries
+
+variable {R : Type*} [CommSemiring R]
+
+lemma eq_trunc_add_X_pow_mul (g : R⟦X⟧) (n : ℕ) : g =
+    trunc n g + (X ^ n : R⟦X⟧) * mk fun m ↦ coeff R (m + n) g:= by
+  ext m
+  by_cases hm : m < n <;>
+  simp [coeff_trunc, hm, coeff_X_pow_mul', Nat.not_le_of_lt, Nat.le_of_not_lt]
+
+end PowerSeries
+
+end for_mathlib
 
 variable {R : Type*} [CommRing R] {I P : Ideal R⟦X⟧} [P_prime : P.IsPrime]
 
@@ -79,26 +95,45 @@ omit [P.IsPrime] in lemma hr : ∑ i, (r haP hg) i * a i = g⁰ := (exists_r haP
 noncomputable
 def g' : ℕ → P
 | 0 => ⟨g, hg⟩
-| n + 1 => by
+| n + 1 =>
+    ⟨mk fun p ↦ (coeff R (p + 1)) (g' n) -
+      ∑ x : Fin k, r haP (g' n).2 x * (coeff R (p + 1)) (f haP x), by
   have := sub_const_eq_X_mul_shift ((g' n).1 - ∑ i, C R (r haP (g' n).2 i) * f haP i)
   simp [hr haP (g' n).2, hfa] at this
   have hf : ∑ i, C R (r haP (g' n).2 i) * f haP i ∈ P :=
     P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P haP i)
-  have := Or.resolve_left (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem (g' n).2 hf)) hP
-  exact ⟨_, this⟩
+  exact Or.resolve_left (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem (g' n).2 hf)) hP⟩
+
+lemma hg' (n : ℕ) : (g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i =
+    X * (g' hP haP hg (n + 1)).1 := by
+  have := sub_const_eq_X_mul_shift
+    ((g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i)
+  simpa [hr haP (g' hP haP hg n).2, hfa]
 
 noncomputable
 def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r haP (g' hP haP hg n).2 i
 
+lemma key (n : ℕ) : g - ∑ i, trunc n ((h hP haP hg) i) * f haP i = X ^ n * (g' hP haP hg n).1 := by
+  induction n with
+  | zero => simp [g']
+  | succ n H =>
+    conv =>
+      enter [1, 2, 2, i]
+      rw [trunc_succ, Polynomial.coe_add, Polynomial.coe_monomial, add_mul, ← mul_one (coeff R n _),
+        ← smul_eq_mul (a' := 1), map_smul, ← X_pow_eq, smul_eq_C_mul, mul_comm _ (X ^ n), mul_assoc]
+    rw [sum_add_distrib, sub_add_eq_sub_sub, H, ← mul_sum, ← mul_sub, pow_succ, mul_assoc,
+    ← hg' hP haP hg n]
+    simp [h]
+
 -- partie la plus intéressante
 lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
+  refine (sub_eq_zero.1 ?_).symm
   ext n
-  simp
-  induction n with
-  | zero => simp [h, hfa, hr, g']
-  | succ n hrec =>
-    simp [h, coeff_mul] at hrec ⊢
-    sorry
+  conv =>
+    enter [1, 2, 2, 2, i]
+    rw [eq_trunc_add_X_pow_mul (h hP haP hg i) (n + 1), add_mul, mul_assoc]
+  simp [sum_add_distrib, ← mul_sum, sub_add_eq_sub_sub, key hP haP hg, ← mul_sub,
+    coeff_X_pow_mul']
 
 include hP in
 theorem P_eq_span_range : P = span (range (f haP)) :=

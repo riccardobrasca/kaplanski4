@@ -54,6 +54,9 @@ end X_mem_I
 section X_not_mem_P
 
 -- Pourquoi utiliser la notation P⁰ dans la définition de hfP casse tout ?
+-- Ric: je pense que `notation` est la même chose que `def` (mais plus réductible, c'est à dire que
+-- Lean unfold it (comme on dit ça en français?!) automatiquement). Le problème est donc que
+-- le `P` dans `haP` devient une nouvelle variable, pas le `P` d'avant
 variable
   (hP : X ∉ P)
   {k : ℕ} {a : Fin k → R} (haP : P.map (constantCoeff R) = span (range a))

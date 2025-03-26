@@ -146,16 +146,32 @@ instance Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
   intro P P_ne_bot P_prime
   by_cases hxP : X ∈ P
   · exact ⟨_, hxP, X_prime⟩
-  · obtain ⟨a, ha⟩ := (principal_R.principal (P⁰)).principal'
-    obtain ⟨T, rfl, hT⟩ := foo (finite_singleton a) hxP ha.symm
+  · obtain ⟨_, ha⟩ := (principal_R.principal (P⁰)).principal'
+    obtain ⟨_, rfl, hT⟩ := foo (finite_singleton _) hxP ha.symm
     simp only [ncard_singleton, ncard_eq_one] at hT
     obtain ⟨f, rfl⟩ := hT
-    exact ⟨f, subset_span (by simp),
+    exact ⟨_, subset_span (by simp),
       (span_singleton_prime (fun hf0 ↦ P_ne_bot (by simp [hf0]))).1 P_prime⟩
 
 end Kaplansky13_6
 
 end
 
-instance {R : Type*} [CommRing R] [IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ := by
+variable {R : Type*} [CommRing R] {P : Ideal R⟦X⟧} [P.IsPrime]
+
+-- Le théorème est censé être dans mathlib mais je ne l'ai pas trouvé.
+lemma is_noetherian_of_prime_ideals_fg
+  (h : ∀ (P : Ideal R), P.IsPrime → P.FG) : IsNoetherianRing R :=
   sorry
+
+lemma p_fg_iff (P : Ideal R⟦X⟧)  [P.IsPrime]: P.FG ↔ (Ideal.map (constantCoeff R) P).FG :=
+  sorry
+
+
+instance [hR : IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ := by
+  apply is_noetherian_of_prime_ideals_fg
+  intro P hP
+  apply (p_fg_iff P ).2
+  have := isNoetherian_def.1 hR
+  specialize this (Ideal.map (constantCoeff R) P)
+  assumption

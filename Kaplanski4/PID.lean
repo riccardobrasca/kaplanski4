@@ -20,6 +20,8 @@ end PowerSeries
 end for_mathlib
 
 
+noncomputable section
+
 variable {R : Type*} [CommRing R] {I P : Ideal R⟦X⟧}
 
 -- Useful notation
@@ -47,19 +49,14 @@ theorem I0_subset_I : (C R)'' I⁰ ⊆ I := by
   have hg' : g = X * g' + C R (g⁰) := eq_X_mul_shift_add_const g
   have hXg' : X * g' ∈ I := I.mul_mem_right _ hXI
   have := I.sub_mem hgI hXg'
-  rw [hg', add_sub_cancel_left] at this
-  assumption
+  rwa [hg', add_sub_cancel_left] at this
 
 theorem bar {S : Set R} (hSI : span S = I⁰) : I = span ((C R)'' S ∪ {X}) := by
   ext f
   rw [Set.union_singleton, mem_span_insert, ← map_span, hSI]
-  apply Iff.intro
-  · intro hf
-    use mk fun p ↦ coeff R (p + 1) f, C R (f⁰)
-    exact ⟨mem_map_of_mem _ (f0_mem hf), eq_shift_mul_X_add_const f⟩
-  · rintro ⟨a, z, hz, hf⟩
-    rw [hf]
-    exact I.add_mem (I.mul_mem_left _ hXI) (span_le.2 (I0_subset_I hXI) hz)
+  exact ⟨fun _ ↦ ⟨mk fun p ↦ coeff R (p + 1) f, C R (f⁰),
+      mem_map_of_mem _ (f0_mem ‹_›), eq_shift_mul_X_add_const f⟩, fun ⟨_, _, _, _⟩ ↦
+      ‹_› ▸ I.add_mem (I.mul_mem_left _ ‹_›) (span_le.2 (I0_subset_I ‹_›) ‹_›)⟩
 
 end X_mem_I
 
@@ -74,7 +71,8 @@ section f_k
 
 lemma exists_f i : ∃ f ∈ P, f⁰ = a i := mem_I0_iff.1 (haP ▸ subset_span (Set.mem_range_self i))
 
-noncomputable def f i := (exists_f haP i).choose
+def f i := (exists_f haP i).choose
+
 lemma f_mem_P i : f haP i ∈ P := (exists_f haP i).choose_spec.1
 
 lemma hfa i : (f haP i)⁰ = a i := (exists_f haP i).choose_spec.2
@@ -85,29 +83,28 @@ include hg in
 lemma exists_r : ∃ r : Fin k → R, ∑ i, r i • a i = (constantCoeff R) g :=
   (mem_span_range_iff_exists_fun R).1 (haP ▸ f0_mem hg : _ ∈ span (range a))
 
-noncomputable def r : Fin k → R := (exists_r haP hg).choose
+def r : Fin k → R := (exists_r haP hg).choose
+
 lemma hr : ∑ i, (r haP hg) i * a i = g⁰ := (exists_r haP hg).choose_spec
 
 variable [P_prime : P.IsPrime]
 
-noncomputable
 def g' : ℕ → P
 | 0 => ⟨g, hg⟩
 | n + 1 =>
   ⟨mk fun p ↦ coeff R (p + 1) (g' n) - ∑ i, r haP (g' n).2 i * coeff R (p + 1) (f haP i), by
     have := sub_const_eq_X_mul_shift ((g' n).1 - ∑ i, C R (r haP (g' n).2 i) * f haP i)
-    simp [hr haP (g' n).2, hfa] at this
+    simp only [map_sub, map_sum, _root_.map_mul, constantCoeff_C, hfa, hr haP (g' n).2, sub_self,
+      map_zero, sub_zero, coeff_C_mul] at this
     have hf : ∑ i, C R (r haP (g' n).2 i) * f haP i ∈ P :=
       P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P haP i)
-    exact Or.resolve_left (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem (g' n).2 hf)) hP⟩
+    exact  (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem (g' n).2 hf)).resolve_left hP⟩
 
 lemma hg' (n : ℕ) : (g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i =
     X * (g' hP haP hg (n + 1)).1 := by
-  have := sub_const_eq_X_mul_shift
+  simpa [hr haP (g' hP haP hg n).2, hfa] using sub_const_eq_X_mul_shift
     ((g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i)
-  simpa [hr haP (g' hP haP hg n).2, hfa]
 
-noncomputable
 def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r haP (g' hP haP hg n).2 i
 
 lemma key (n : ℕ) : g - ∑ i, trunc n ((h hP haP hg) i) * f haP i = X ^ n * (g' hP haP hg n).1 := by
@@ -119,7 +116,7 @@ lemma key (n : ℕ) : g - ∑ i, trunc n ((h hP haP hg) i) * f haP i = X ^ n * (
       rw [trunc_succ, Polynomial.coe_add, Polynomial.coe_monomial, add_mul, ← mul_one (coeff R n _),
         ← smul_eq_mul (b := 1), map_smul, ← X_pow_eq, smul_eq_C_mul, mul_comm _ (X ^ n), mul_assoc]
     rw [sum_add_distrib, sub_add_eq_sub_sub, H, ← mul_sum, ← mul_sub]
-    simp [h, hg']
+    simp only [h, coeff_mk, hg']
     ring
 
 lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
@@ -135,7 +132,17 @@ include hP in
 theorem P_eq_span_range : P = span (range (f haP)) :=
   le_antisymm
     (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g hP haP hg⟩)
-    (span_le.2 (Set.range_subset_iff.2 (f_mem_P haP)))
+    <| span_le.2 <| Set.range_subset_iff.2 <| f_mem_P haP
+
+theorem foo {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
+    (hSP : span S = P.map (constantCoeff R)) {T : Set R⟦X⟧}
+    (hT : (constantCoeff R) '' T = S) : span T = I := by
+  sorry
+
+theorem foo' {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
+    (hSP : span S = P.map (constantCoeff R)) :
+    ∃ T : Set R⟦X⟧, span T = I ∧ T.ncard = S.ncard := by
+  sorry
 
 end X_not_mem_P
 
@@ -156,6 +163,8 @@ instance Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
     exact ⟨f haP 0, f_mem_P haP 0, (span_singleton_prime f_ne_0).1 (P_span_f ▸ P_prime)⟩
 
 end Kaplansky13_6
+
+end
 
 instance {R : Type*} [CommRing R] [IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ := by
   sorry

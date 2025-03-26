@@ -139,9 +139,10 @@ theorem foo {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
     (hT : (constantCoeff R) '' T = S) : span T = I := by
   sorry
 
+omit haP in
 theorem foo' {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
     (hSP : span S = P.map (constantCoeff R)) :
-    ∃ T : Set R⟦X⟧, span T = I ∧ T.ncard = S.ncard := by
+    ∃ T : Set R⟦X⟧, span T = P ∧ T.ncard = S.ncard := by
   sorry
 
 end X_not_mem_P
@@ -156,11 +157,11 @@ instance Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
   by_cases hxP : X ∈ P
   · exact ⟨_, hxP, X_prime⟩
   · obtain ⟨a, ha⟩ := (principal_R.principal (P⁰)).principal'
-    let a' (_ : Fin 1) := a
-    have haP : P⁰ = span (range a') := by simp [ha, a']
-    have P_span_f : P = span {f haP 0} := by simp [P_eq_span_range hxP haP, Fin.range_fin_succ]
-    have f_ne_0 : f haP 0 ≠ 0 := span_singleton_eq_bot.not.1 (P_span_f ▸ P_ne_bot)
-    exact ⟨f haP 0, f_mem_P haP 0, (span_singleton_prime f_ne_0).1 (P_span_f ▸ P_prime)⟩
+    obtain ⟨T, rfl, hT⟩ := foo' (finite_singleton a) hxP ha.symm
+    simp only [ncard_singleton, ncard_eq_one] at hT
+    obtain ⟨f, rfl⟩ := hT
+    exact ⟨f, subset_span (by simp),
+      (span_singleton_prime (fun hf0 ↦ P_ne_bot (by simp [hf0]))).1 P_prime⟩
 
 end Kaplansky13_6
 

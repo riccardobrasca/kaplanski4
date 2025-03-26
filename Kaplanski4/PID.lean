@@ -22,7 +22,7 @@ end for_mathlib
 
 noncomputable section
 
-variable {R : Type*} [CommRing R] {I P : Ideal R⟦X⟧}
+variable {R : Type*} [CommRing R]
 
 -- Useful notation
 local notation I"⁰" => Ideal.map (constantCoeff R) I
@@ -37,34 +37,29 @@ lemma f0_mem {I : Ideal R⟦X⟧} {f : R⟦X⟧} (hf : f ∈ I) : f⁰ ∈ I⁰ 
 
 section X_mem_I
 
-variable (hXI : X ∈ I)
+variable {I : Ideal R⟦X⟧} (hXI : X ∈ I)
 include hXI
 
 theorem I0_subset_I : (C R)'' I⁰ ⊆ I := by
-  intro f ⟨r, hrI, hra⟩
-  rw [SetLike.mem_coe, mem_I0_iff] at hrI
-  rcases hrI with ⟨g, hgI, hgr⟩
-  rw [← hra, ← hgr]
-  let g' := mk fun p ↦ coeff R (p + 1) g
-  have hg' : g = X * g' + C R (g⁰) := eq_X_mul_shift_add_const g
-  have hXg' : X * g' ∈ I := I.mul_mem_right _ hXI
-  have := I.sub_mem hgI hXg'
-  rwa [hg', add_sub_cancel_left] at this
+  intro _ ⟨_, hI, ha⟩
+  rcases mem_I0_iff.1 <| SetLike.mem_coe.1 hI with ⟨g, _, hgr⟩
+  rw [← ha, ← hgr]
+  exact eq_sub_of_add_eq' g.eq_X_mul_shift_add_const.symm ▸ I.sub_mem ‹_› (I.mul_mem_right _ ‹_›)
 
 theorem bar {S : Set R} (hSI : span S = I⁰) : I = span ((C R)'' S ∪ {X}) := by
   ext f
   rw [Set.union_singleton, mem_span_insert, ← map_span, hSI]
   exact ⟨fun _ ↦ ⟨mk fun p ↦ coeff R (p + 1) f, C R (f⁰),
-      mem_map_of_mem _ (f0_mem ‹_›), eq_shift_mul_X_add_const f⟩, fun ⟨_, _, _, _⟩ ↦
-      ‹_› ▸ I.add_mem (I.mul_mem_left _ ‹_›) (span_le.2 (I0_subset_I ‹_›) ‹_›)⟩
+      mem_map_of_mem _ (f0_mem ‹_›), f.eq_shift_mul_X_add_const⟩,
+      fun ⟨_, _, _, _⟩ ↦ ‹_› ▸ I.add_mem (I.mul_mem_left _ ‹_›) (span_le.2 (I0_subset_I ‹_›) ‹_›)⟩
 
 end X_mem_I
 
 
 section X_not_mem_P
 
-variable (hP : X ∉ P) {k : ℕ} {a : Fin k → R} (haP : P.map (constantCoeff R) = span (range a))
-  {g : R⟦X⟧} (hg : g ∈ P)
+variable {P : Ideal R⟦X⟧} (hP : X ∉ P) {k : ℕ} {a : Fin k → R}
+  (haP : P.map (constantCoeff R) = span (range a)) {g : R⟦X⟧} (hg : g ∈ P)
 include haP
 
 section f_k
@@ -134,13 +129,8 @@ theorem P_eq_span_range : P = span (range (f haP)) :=
     (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g hP haP hg⟩)
     <| span_le.2 <| Set.range_subset_iff.2 <| f_mem_P haP
 
-theorem foo {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
-    (hSP : span S = P.map (constantCoeff R)) {T : Set R⟦X⟧}
-    (hT : (constantCoeff R) '' T = S) : span T = I := by
-  sorry
-
 omit haP in
-theorem foo' {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
+theorem foo {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
     (hSP : span S = P.map (constantCoeff R)) :
     ∃ T : Set R⟦X⟧, span T = P ∧ T.ncard = S.ncard := by
   sorry
@@ -157,7 +147,7 @@ instance Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
   by_cases hxP : X ∈ P
   · exact ⟨_, hxP, X_prime⟩
   · obtain ⟨a, ha⟩ := (principal_R.principal (P⁰)).principal'
-    obtain ⟨T, rfl, hT⟩ := foo' (finite_singleton a) hxP ha.symm
+    obtain ⟨T, rfl, hT⟩ := foo (finite_singleton a) hxP ha.symm
     simp only [ncard_singleton, ncard_eq_one] at hT
     obtain ⟨f, rfl⟩ := hT
     exact ⟨f, subset_span (by simp),

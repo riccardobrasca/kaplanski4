@@ -1,6 +1,5 @@
 import Mathlib
-import Kaplanski4
-set_option pp.proofs true
+import Kaplanski4.Kaplanski
 
 open PowerSeries Ideal Set BigOperators Finset
 
@@ -21,9 +20,9 @@ end PowerSeries
 end for_mathlib
 
 
-variable {R : Type*} [CommRing R] {I P : Ideal R⟦X⟧} [P_prime : P.IsPrime]
+variable {R : Type*} [CommRing R] {I P : Ideal R⟦X⟧}
 
--- Usefull notation
+-- Useful notation
 local notation I"⁰" => Ideal.map (constantCoeff R) I
 local notation f"⁰" => PowerSeries.constantCoeff R f
 
@@ -44,7 +43,6 @@ theorem I0_subset_I : (C R)'' I⁰ ⊆ I := by
   rw [SetLike.mem_coe, mem_I0_iff] at hrI
   rcases hrI with ⟨g, hgI, hgr⟩
   rw [← hra, ← hgr]
-
   let g' := mk fun p ↦ coeff R (p + 1) g
   have hg' : g = X * g' + C R (g⁰) := eq_X_mul_shift_add_const g
   have hXg' : X * g' ∈ I := I.mul_mem_right _ hXI
@@ -68,28 +66,29 @@ end X_mem_I
 
 section X_not_mem_P
 
--- Pourquoi utiliser la notation P⁰ dans la définition de hfP casse tout ?
--- Ric: je pense que `notation` est la même chose que `def` (mais plus réductible, c'est à dire que
--- Lean unfold it (comme on dit ça en français?!) automatiquement). Le problème est donc que
--- le `P` dans `haP` devient une nouvelle variable, pas le `P` d'avant
-variable
-  (hP : X ∉ P)
-  {k : ℕ} {a : Fin k → R} (haP : P.map (constantCoeff R) = span (range a))
+variable (hP : X ∉ P) {k : ℕ} {a : Fin k → R} (haP : P.map (constantCoeff R) = span (range a))
   {g : R⟦X⟧} (hg : g ∈ P)
 include haP
 
-
 section f_k
-omit [P.IsPrime]
+
 lemma exists_f i : ∃ f ∈ P, f⁰ = a i := mem_I0_iff.1 (haP ▸ subset_span (Set.mem_range_self i))
+
 noncomputable def f i := (exists_f haP i).choose
 lemma f_mem_P i : f haP i ∈ P := (exists_f haP i).choose_spec.1
+
 lemma hfa i : (f haP i)⁰ = a i := (exists_f haP i).choose_spec.2
+
 end f_k
 
-def exists_r := (mem_span_range_iff_exists_fun R).1 (haP ▸ f0_mem hg)
+include hg in
+lemma exists_r : ∃ r : Fin k → R, ∑ i, r i • a i = (constantCoeff R) g :=
+  (mem_span_range_iff_exists_fun R).1 (haP ▸ f0_mem hg : _ ∈ span (range a))
+
 noncomputable def r : Fin k → R := (exists_r haP hg).choose
-omit [P.IsPrime] in lemma hr : ∑ i, (r haP hg) i * a i = g⁰ := (exists_r haP hg).choose_spec
+lemma hr : ∑ i, (r haP hg) i * a i = g⁰ := (exists_r haP hg).choose_spec
+
+variable [P_prime : P.IsPrime]
 
 noncomputable
 def g' : ℕ → P
@@ -118,12 +117,11 @@ lemma key (n : ℕ) : g - ∑ i, trunc n ((h hP haP hg) i) * f haP i = X ^ n * (
     conv =>
       enter [1, 2, 2, i]
       rw [trunc_succ, Polynomial.coe_add, Polynomial.coe_monomial, add_mul, ← mul_one (coeff R n _),
-        ← smul_eq_mul (a' := 1), map_smul, ← X_pow_eq, smul_eq_C_mul, mul_comm _ (X ^ n), mul_assoc]
+        ← smul_eq_mul (b := 1), map_smul, ← X_pow_eq, smul_eq_C_mul, mul_comm _ (X ^ n), mul_assoc]
     rw [sum_add_distrib, sub_add_eq_sub_sub, H, ← mul_sum, ← mul_sub]
     simp [h, hg']
     ring
 
--- partie la plus intéressante
 lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
   refine (sub_eq_zero.1 ?_).symm
   ext n
@@ -144,7 +142,7 @@ end X_not_mem_P
 
 section Kaplansky13_6
 
-theorem Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
+instance Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
     UniqueFactorizationMonoid R⟦X⟧ :=  by
   apply (uniqueFactorizationMonoid_iff ⟨_, X_prime⟩).2
   intro P P_ne_bot P_prime
@@ -158,3 +156,6 @@ theorem Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
     exact ⟨f haP 0, f_mem_P haP 0, (span_singleton_prime f_ne_0).1 (P_span_f ▸ P_prime)⟩
 
 end Kaplansky13_6
+
+instance {R : Type*} [CommRing R] [IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ := by
+  sorry

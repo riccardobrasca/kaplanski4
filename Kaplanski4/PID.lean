@@ -31,8 +31,8 @@ local notation f"⁰" => PowerSeries.constantCoeff R f
 lemma mem_I0_iff {I : Ideal R⟦X⟧} {x : R} : x ∈ I⁰ ↔ ∃ f ∈ I, f⁰ = x :=
   I.mem_map_iff_of_surjective _ constantCoeff_surj
 
-lemma f0_mem {I : Ideal R⟦X⟧} {f : R⟦X⟧} (hf : f ∈ I) : f⁰ ∈ I⁰ :=
-  mem_I0_iff.2 ⟨f, hf, rfl⟩
+lemma f0_mem {I : Ideal R⟦X⟧} {f : R⟦X⟧} : f ∈ I → f⁰ ∈ I⁰ :=
+  (mem_I0_iff.2 ⟨_, ·, rfl⟩)
 
 
 section X_mem_I
@@ -41,17 +41,29 @@ variable {I : Ideal R⟦X⟧} (hXI : X ∈ I)
 include hXI
 
 theorem I0_subset_I : (C R)'' I⁰ ⊆ I := by
-  intro _ ⟨_, hI, ha⟩
-  rcases mem_I0_iff.1 <| SetLike.mem_coe.1 hI with ⟨g, _, hgr⟩
+  intro _ ⟨_, _, ha⟩
+  rcases mem_I0_iff.1 <| SetLike.mem_coe.1 ‹_› with ⟨g, _, hgr⟩
   rw [← ha, ← hgr]
   exact eq_sub_of_add_eq' g.eq_X_mul_shift_add_const.symm ▸ I.sub_mem ‹_› (I.mul_mem_right _ ‹_›)
 
-theorem bar {S : Set R} (hSI : span S = I⁰) : I = span ((C R)'' S ∪ {X}) := by
+variable {S : Set R} (hSI : span S = I.map (constantCoeff R))
+include hSI
+
+theorem bar : I = span ((C R)'' S ∪ {X}) := by
   ext f
-  rw [Set.union_singleton, mem_span_insert, ← map_span, hSI]
+  rw [union_singleton, mem_span_insert, ← map_span, hSI]
   exact ⟨fun _ ↦ ⟨mk fun p ↦ coeff R (p + 1) f, C R (f⁰),
-      mem_map_of_mem _ (f0_mem ‹_›), f.eq_shift_mul_X_add_const⟩,
+        mem_map_of_mem _ (f0_mem ‹_›), f.eq_shift_mul_X_add_const⟩,
       fun ⟨_, _, _, _⟩ ↦ ‹_› ▸ I.add_mem (I.mul_mem_left _ ‹_›) (span_le.2 (I0_subset_I ‹_›) ‹_›)⟩
+
+theorem bar' [Nontrivial R] (_ : S.Finite) : ∃ T, I = span T ∧ T.ncard = S.ncard + 1 := by
+  have := bar ‹_› ‹_›
+  refine ⟨_, ‹_›, ?_⟩
+  have := injOn_of_injective C_injective (s := S)
+  rw [ncard_eq_succ <| finite_union.2 ⟨(finite_image_iff ‹_›).2 ‹_›, finite_singleton _⟩]
+  use X, (C R)'' S
+  exact ⟨fun ⟨_, _, aX⟩ ↦ by simpa using congrArg (coeff R 1) aX, union_singleton.symm,
+    (ncard_image_iff ‹_›).2 ‹_›⟩
 
 end X_mem_I
 
@@ -62,17 +74,13 @@ variable {P : Ideal R⟦X⟧} (hP : X ∉ P) {k : ℕ} {a : Fin k → R}
   (haP : P.map (constantCoeff R) = span (range a)) {g : R⟦X⟧} (hg : g ∈ P)
 include haP
 
-section f_k
-
-lemma exists_f i : ∃ f ∈ P, f⁰ = a i := mem_I0_iff.1 (haP ▸ subset_span (Set.mem_range_self i))
+lemma exists_f i : ∃ f ∈ P, f⁰ = a i := mem_I0_iff.1 <| haP ▸ subset_span (mem_range_self i)
 
 def f i := (exists_f haP i).choose
 
 lemma f_mem_P i : f haP i ∈ P := (exists_f haP i).choose_spec.1
 
 lemma hfa i : (f haP i)⁰ = a i := (exists_f haP i).choose_spec.2
-
-end f_k
 
 include hg in
 lemma exists_r : ∃ r : Fin k → R, ∑ i, r i • a i = (constantCoeff R) g :=
@@ -127,7 +135,7 @@ include hP in
 theorem P_eq_span_range : P = span (range (f haP)) :=
   le_antisymm
     (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g hP haP hg⟩)
-    <| span_le.2 <| Set.range_subset_iff.2 <| f_mem_P haP
+    <| span_le.2 <| range_subset_iff.2 <| f_mem_P haP
 
 omit haP in
 theorem foo {S : Set R} (hS : S.Finite) (hPX : X ∉ P)

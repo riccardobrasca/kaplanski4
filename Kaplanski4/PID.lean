@@ -1,5 +1,6 @@
 import Mathlib
 import Kaplanski4.Kaplanski
+import Kaplanski4.Cohen
 
 open PowerSeries Ideal Set BigOperators Finset
 
@@ -159,13 +160,13 @@ end
 
 variable {R : Type*} [CommRing R] {P : Ideal R⟦X⟧} [P.IsPrime]
 
--- Le théorème est censé être dans mathlib mais je ne l'ai pas trouvé.
-lemma is_noetherian_of_prime_ideals_fg
-  (h : ∀ (P : Ideal R), P.IsPrime → P.FG) : IsNoetherianRing R :=
-  sorry
+
+
 
 lemma p_fg_iff (P : Ideal R⟦X⟧)  [P.IsPrime]: P.FG ↔ (Ideal.map (constantCoeff R) P).FG :=
   sorry
+
+
 
 
 instance [hR : IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ := by

@@ -6,7 +6,6 @@ def S (R : Type*) [CommRing R] := {I : Ideal R | ¬ I.FG}
 
 variable {R : Type*} [CommRing R]
 
-lemma fg_of_le_fg {I J : Ideal R} (h : J.FG) (h2 : I ≤ J) : I.FG := sorry
 
 section zorn
 
@@ -17,15 +16,24 @@ lemma nonempty_S : (S R).Nonempty :=
   not_forall.1  <| (isNoetherianRing_iff_ideal_fg _).not.1 h
 
 
-theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ S R) (_ : IsChain (· ≤ ·) C) :
+theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ S R) (hC₂ : IsChain (· ≤ ·) C) :
     ∃ P ∈ S R, ∀ I ∈ C, I ≤ P := by
   by_cases C.Nonempty
   · refine ⟨sSup C, ?_, fun _ ↦ le_sSup⟩
-    intro supFG
-    obtain ⟨I, hI⟩ := (Set.nonempty_def.1 ‹C.Nonempty›)
-    have : I.FG := fg_of_le_fg supFG (le_sSup hI)
-    have : ¬ I.FG := hC hI
-    contradiction
+    intro ⟨G, hG⟩
+    have : ∃ I ∈ C, Finset.toSet G ⊆ I := by
+      have := hG ▸ subset_span
+      have : ∀ g ∈ G, ∃ I ∈ C, g ∈ I :=
+        fun _ _ ↦ (Submodule.mem_sSup_of_directed ‹_› hC₂.directedOn).1 (this ‹_›)
+      let I' := sSup { Exists.choose (this g.1 g.2) | g : G }
+      use I'
+      sorry
+
+
+    obtain ⟨I, I_mem_C, hGI⟩ := this
+    have := hG ▸ span_le.2 hGI
+    have : sSup C = I := LE.le.antisymm this (le_sSup I_mem_C)
+    refine hC I_mem_C ⟨G, this ▸ hG⟩
   · rw [Set.not_nonempty_iff_eq_empty.1 ‹¬C.Nonempty›]
     obtain ⟨_, _⟩ := (Set.nonempty_def.1 <| nonempty_S h)
     exact ⟨_, ‹_›, by simp⟩
@@ -45,14 +53,6 @@ theorem is_noetherian_of_prime_ideals_fg
   obtain ⟨M, hM⟩ := exists_maximal_not_fg ‹_›
 
   suffices Mprime : M.IsPrime
-  · have := h M Mprime
-    have := (maximal_mem_iff.1 hM).1
-    contradiction
+  · exact absurd (h M Mprime) (maximal_mem_iff.1 hM).1
   · by_contra M_not_prime
-    have  := isPrime_iff.not.1 M_not_prime
-    simp at this
-    have hMtop : M ≠ ⊤ := by sorry
-    obtain ⟨a, b, ab_mem_M, a_not_mem_M, b_not_mem_M⟩ := this hMtop
-
-
     sorry

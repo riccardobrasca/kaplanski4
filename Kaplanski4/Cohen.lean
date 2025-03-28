@@ -21,7 +21,7 @@ theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ S R) (hC₂ : IsCh
   by_cases C.Nonempty
   · refine ⟨sSup C, ?_, fun _ ↦ le_sSup⟩
     intro ⟨G, hG⟩
-    have : ∃ I ∈ C, G.toSet ⊆ (I : Set R) := by
+    have : ∃ I ∈ C, G.toSet ⊆ I := by
       refine DirectedOn.exists_mem_subset_of_finset_subset_biUnion ‹_› hC₂.directedOn
         (fun x hx ↦ ?_)
       obtain ⟨I, hIC, h⟩ := (Submodule.mem_sSup_of_directed ‹_› hC₂.directedOn).1 <|

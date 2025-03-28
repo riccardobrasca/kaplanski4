@@ -22,10 +22,9 @@ theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ S R) (hC₂ : IsCh
   · refine ⟨sSup C, ?_, fun _ ↦ le_sSup⟩
     intro ⟨G, hG⟩
     have : ∃ I ∈ C, G.toSet ⊆ I := by
-      refine DirectedOn.exists_mem_subset_of_finset_subset_biUnion ‹_› hC₂.directedOn
-        (fun x hx ↦ ?_)
+      refine hC₂.directedOn.exists_mem_subset_of_finset_subset_biUnion ‹_› (fun x hx ↦ ?_)
       obtain ⟨I, hIC, h⟩ := (Submodule.mem_sSup_of_directed ‹_› hC₂.directedOn).1 <|
-        hG ▸ Ideal.subset_span hx
+        hG ▸ subset_span hx
       exact Set.mem_biUnion hIC h
     obtain ⟨I, I_mem_C, hGI⟩ := this
     have := hG ▸ span_le.2 hGI

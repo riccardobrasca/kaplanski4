@@ -16,7 +16,7 @@ lemma nonempty_S : (S R).Nonempty :=
   not_forall.1  <| (isNoetherianRing_iff_ideal_fg _).not.1 h
 
 
-theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ S R) (hC₂ : IsChain (· ≤ ·) C) :
+theorem cohen_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ S R) (hC₂ : IsChain (· ≤ ·) C) :
     ∃ P ∈ S R, ∀ I ∈ C, I ≤ P := by
   by_cases C.Nonempty
   · refine ⟨sSup C, ?_, fun _ ↦ le_sSup⟩
@@ -36,7 +36,7 @@ theorem hypothesis_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ S R) (hC₂ : IsCh
 
 
 theorem exists_maximal_not_fg : ∃ (M : Ideal R), Maximal (· ∈ S R) M :=
-  zorn_le₀ (S R) (hypothesis_zorn_lemma h)
+  zorn_le₀ (S R) (cohen_zorn_lemma h)
 
 
 end zorn

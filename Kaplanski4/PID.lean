@@ -72,46 +72,57 @@ end X_mem_I
 section X_not_mem_P
 
 variable {P : Ideal R⟦X⟧} (hP : X ∉ P) {k : ℕ} {a : Fin k → R}
-  (haP : P.map (constantCoeff R) = span (range a)) {g : R⟦X⟧} (hg : g ∈ P)
-include haP
+  (haP : P.map (constantCoeff R) = span (range a))
 
-lemma exists_f i : ∃ f ∈ P, f⁰ = a i := mem_I0_iff.1 <| haP ▸ subset_span (mem_range_self i)
+/- Exctacting `f : Fin k → R⟦X⟧` from `a : Fin k → R` -/
+section f
+
+include haP in
+lemma exists_f : ∀ i, ∃ f ∈ P, f⁰ = a i :=
+  fun i ↦ mem_I0_iff.1 <| haP ▸ subset_span (mem_range_self i)
 
 def f i := (exists_f haP i).choose
 
-lemma f_mem_P i : f haP i ∈ P := (exists_f haP i).choose_spec.1
+lemma f_mem_P : ∀ i, f haP i ∈ P := fun i ↦ (exists_f haP i).choose_spec.1
 
-lemma hfa i : (f haP i)⁰ = a i := (exists_f haP i).choose_spec.2
+lemma hfa : ∀ i, (f haP i)⁰ = a i := fun i ↦ (exists_f haP i).choose_spec.2
 
-include hg in
-lemma exists_r : ∃ r : Fin k → R, ∑ i, r i • a i = (constantCoeff R) g :=
-  (mem_span_range_iff_exists_fun R).1 (haP ▸ f0_mem hg : _ ∈ span (range a))
+end f
 
-def r : Fin k → R := (exists_r haP hg).choose
+variable {g : R⟦X⟧} (hg : g ∈ P)
 
-lemma hr : ∑ i, (r haP hg) i * a i = g⁰ := (exists_r haP hg).choose_spec
+include haP hg in
+lemma exists_r : ∃ r : Fin k → R, ∑ i, r i * a i = g⁰ :=
+  mem_ideal_span_range_iff_exists_fun.1 (haP ▸ f0_mem ‹_›)
+
+def r : Fin k → R := (exists_r ‹_› hg).choose
+
+lemma hr : ∑ i, r ‹_› hg i * a i = g⁰ := (exists_r ‹_› ‹_›).choose_spec
+
+/- We now want to show that g = ∑ i, h i * f i for some `h : Fin k → R⟦X⟧` -/
 
 variable [P_prime : P.IsPrime]
+include hP
 
 def g' : ℕ → P
 | 0 => ⟨g, hg⟩
 | n + 1 =>
-  ⟨mk fun p ↦ coeff R (p + 1) (g' n) - ∑ i, r haP (g' n).2 i * coeff R (p + 1) (f haP i), by
-    have := sub_const_eq_X_mul_shift ((g' n).1 - ∑ i, C R (r haP (g' n).2 i) * f haP i)
-    simp only [map_sub, map_sum, _root_.map_mul, constantCoeff_C, hfa, hr haP (g' n).2, sub_self,
-      map_zero, sub_zero, coeff_C_mul] at this
-    have hf : ∑ i, C R (r haP (g' n).2 i) * f haP i ∈ P :=
-      P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P haP i)
-    exact  (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem (g' n).2 hf)).resolve_left hP⟩
+  ⟨mk fun p ↦ coeff R (p + 1) (g' n) - ∑ i, r ‹_› (g' n).2 i * coeff R (p + 1) (f ‹_› i), by
+    have h := sub_const_eq_X_mul_shift ((g' n).1 - ∑ i, C R (r ‹_› (g' n).2 i) * f ‹_› i)
+    simp only [map_sub, map_sum, _root_.map_mul, constantCoeff_C, hfa, hr, sub_self, map_zero,
+      sub_zero, coeff_C_mul] at h
+    have : ∑ i, C R (r ‹_› (g' n).2 i) * f ‹_› i ∈ P :=
+      P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P ‹_› i)
+    exact (P_prime.mul_mem_iff_mem_or_mem.1 (h ▸ P.sub_mem (g' n).2 ‹_›)).resolve_left hP⟩
 
-lemma hg' (n : ℕ) : (g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i =
-    X * (g' hP haP hg (n + 1)).1 := by
-  simpa [hr haP (g' hP haP hg n).2, hfa] using sub_const_eq_X_mul_shift
+lemma hg' (n : ℕ) : (g' ‹_› ‹_› ‹_› n).1 - ∑ i, C R (r ‹_› (g' ‹_› ‹_› ‹_› n).2 i) * f ‹_› i =
+    X * (g' ‹_› ‹_› ‹_› (n + 1)).1 := by
+  simpa [hr, hfa] using sub_const_eq_X_mul_shift
     ((g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i)
 
-def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r haP (g' hP haP hg n).2 i
+def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r ‹_› (g' ‹_› ‹_› ‹_› n).2 i
 
-lemma key (n : ℕ) : g - ∑ i, trunc n ((h hP haP hg) i) * f haP i = X ^ n * (g' hP haP hg n).1 := by
+lemma key (n : ℕ) : g - ∑ i, trunc n (h ‹_› ‹_› hg i) * f haP i = X ^ n * (g' ‹_› ‹_› ‹_› n).1 := by
   induction n with
   | zero => simp [g']
   | succ n H =>
@@ -123,26 +134,32 @@ lemma key (n : ℕ) : g - ∑ i, trunc n ((h hP haP hg) i) * f haP i = X ^ n * (
     simp only [h, coeff_mk, hg']
     ring
 
-lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
+lemma sum_h_eq_g : ∑ i, h ‹_› ‹_› ‹_› i * f ‹_› i = g := by
   refine (sub_eq_zero.1 ?_).symm
   ext n
   conv =>
     enter [1, 2, 2, 2, i]
-    rw [eq_trunc_add_X_pow_mul (h hP haP hg i) (n + 1), add_mul, mul_assoc]
+    rw [eq_trunc_add_X_pow_mul (h ‹_› ‹_› ‹_› i) (n + 1), add_mul, mul_assoc]
   rw [sum_add_distrib, sub_add_eq_sub_sub, key, ← mul_sum]
   simp [coeff_X_pow_mul']
 
-include hP in
-theorem P_eq_span_range : P = span (range (f haP)) :=
-  le_antisymm
-    (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g hP haP hg⟩)
-    <| span_le.2 <| range_subset_iff.2 <| f_mem_P haP
+/- We show that P is finitely generated  -/
 
-omit haP in
-theorem foo {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
-    (hSP : span S = P.map (constantCoeff R)) :
-    ∃ T : Set R⟦X⟧, span T = P ∧ T.ncard = S.ncard := by
-  sorry
+theorem P_eq_span_range : P = span (range (f ‹_›)) :=
+  le_antisymm
+    (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g ‹_› ‹_› ‹_›⟩)
+    (span_le.2 <| range_subset_iff.2 <| f_mem_P ‹_›)
+
+set_option pp.proofs true
+
+theorem foo {S : Set R} (hSP : span S = P⁰) (hS : S.Finite) :
+    ∃ T, span T = P ∧ T.ncard = S.ncard := by
+  obtain ⟨k, a, a_injective, rfl⟩ := hS.fin_param
+  have := P_eq_span_range ‹_› hSP.symm
+  refine ⟨_, this.symm, ?_⟩
+  apply Eq.symm
+  refine ncard_congr ?_ (fun a ↦ ?_) ?_ ?_
+  <;> sorry
 
 end X_not_mem_P
 
@@ -156,7 +173,7 @@ instance Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
   by_cases hxP : X ∈ P
   · exact ⟨_, hxP, X_prime⟩
   · obtain ⟨_, ha⟩ := (principal_R.principal (P⁰)).principal'
-    obtain ⟨_, rfl, hT⟩ := foo (finite_singleton _) hxP ha.symm
+    obtain ⟨_, rfl, hT⟩ := foo hxP ha.symm (finite_singleton _)
     simp only [ncard_singleton, ncard_eq_one] at hT
     obtain ⟨f, rfl⟩ := hT
     exact ⟨_, subset_span (by simp),

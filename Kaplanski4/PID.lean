@@ -149,10 +149,10 @@ theorem P_eq_span_range : P = span (range (f ‹_›)) :=
     (span_le.2 <| range_subset_iff.2 <| f_mem_P ‹_›)
 
 theorem foo {S : Set R} (hSP : span S = P⁰) (hS : S.Finite) :
-    ∃ T, P = span T ∧ T.ncard = S.ncard := by
+    ∃ T, P = span T ∧ T.Finite ∧ T.ncard = S.ncard := by
   obtain ⟨k, a, a_injective, rfl⟩ := hS.fin_param
   have := P_eq_span_range ‹_› hSP
-  refine ⟨_, this, ?_⟩
+  refine ⟨_, this, finite_range _, ?_⟩
   apply Eq.symm
   refine ncard_congr (fun _ h ↦ f ‹_› (mem_range.1 h).choose) ?_ ?_ ?_
   · intro _ _
@@ -178,26 +178,24 @@ instance [hR : IsPrincipalIdealRing R] [IsDomain R] : UniqueFactorizationMonoid 
   by_cases X ∈ P
   · exact ⟨X, ‹_›, X_prime⟩
   · obtain ⟨_, _⟩ := (hR.principal (P⁰)).principal'
-    obtain ⟨_, rfl, h⟩ := foo ‹_› (Eq.symm ‹_›) (finite_singleton _)
+    obtain ⟨_, rfl, _, h⟩ := foo ‹_› (Eq.symm ‹_›) (finite_singleton _)
     simp only [ncard_singleton, ncard_eq_one] at h
     obtain ⟨_, rfl⟩ := h
-    exact ⟨_, subset_span (mem_singleton _),
+    exact ⟨_, mem_span_singleton_self _,
       (span_singleton_prime (span_singleton_eq_bot.not.1 ‹_›)).1 ‹_›⟩
 
 lemma prime_fg_iff {P : Ideal R⟦X⟧} [P.IsPrime] : P.FG ↔ (P⁰).FG := by
   constructor
   · exact (FG.map · _)
-  · intro ⟨S, hS⟩
+  · intro ⟨S, _⟩
     by_cases X ∈ P
     · have := union_singleton ▸ bar ‹_› ‹_›
       have : (insert X <| (C R)'' S).Finite := Finite.insert X <| Finite.image _ S.finite_toSet
       lift insert X <| (C R)'' S to Finset R⟦X⟧ using this with T hT
       exact ⟨T, hT ▸ this.symm⟩
-    · obtain ⟨T, hT₁, hT₂⟩ := foo ‹_› ‹_› S.finite_toSet
-      have : T.Finite := by
-        sorry
-      lift T to Finset R⟦X⟧ using this
-      exact ⟨T, hT₁.symm⟩
+    · obtain ⟨T, hT, hT₂, _⟩ := foo ‹_› ‹_› S.finite_toSet
+      lift T to Finset R⟦X⟧ using hT₂
+      exact ⟨T, hT.symm⟩
 
 instance [IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ :=
   is_noetherian_of_prime_ideals_fg fun P _ ↦

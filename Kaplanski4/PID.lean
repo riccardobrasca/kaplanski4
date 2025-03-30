@@ -154,11 +154,17 @@ theorem foo {S : Set R} (hSP : span S = P⁰) (hS : S.Finite) :
   have := P_eq_span_range ‹_› hSP
   refine ⟨_, this, ?_⟩
   apply Eq.symm
-  refine ncard_congr (fun _ h ↦ f ‹_› <| (mem_range.1 h).choose) (fun _ _ ↦ by simp) ?_ ?_
-  · intro ai aj hai haj
-    simp
-    sorry
+  refine ncard_congr (fun _ h ↦ f ‹_› (mem_range.1 h).choose) ?_ ?_ ?_
+  · intro _ _
+    exact mem_range_self _
+  · intro ai aj hai haj hf
+    replace hai := (mem_range.1 hai).choose_spec
+    replace haj := (mem_range.1 haj).choose_spec
+    have := congrArg (constantCoeff R) hf
+    simpa [hfa, hai, haj]
   · intro fi hfi
+    obtain ⟨i, hi⟩ := (mem_range.1 hfi)
+    use a i, mem_range_self i
     sorry
 
 end X_not_mem_P

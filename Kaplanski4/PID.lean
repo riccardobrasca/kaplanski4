@@ -60,11 +60,9 @@ theorem bar : I = span ((C R)'' S ∪ {X}) := by
 theorem bar' [Nontrivial R] (_ : S.Finite) : ∃ T, I = span T ∧ T.ncard = S.ncard + 1 := by
   have := bar ‹_› ‹_›
   refine ⟨_, ‹_›, ?_⟩
-  have := injOn_of_injective C_injective (s := S)
-  rw [ncard_eq_succ <| finite_union.2 ⟨(finite_image_iff ‹_›).2 ‹_›, finite_singleton _⟩]
-  use X, (C R)'' S
-  exact ⟨fun ⟨_, _, aX⟩ ↦ by simpa using congrArg (coeff R 1) aX, union_singleton.symm,
-    (ncard_image_iff ‹_›).2 ‹_›⟩
+  have : X ∉ (C R)'' S := fun ⟨_, _, h⟩ ↦ by simpa using congrArg (coeff R 1) h
+  rw [← ncard_image_of_injective S C_injective, union_singleton,
+    ncard_insert_of_not_mem ‹_› (Finite.image _ ‹_›)]
 
 end X_mem_I
 
@@ -72,7 +70,7 @@ end X_mem_I
 section X_not_mem_P
 
 variable {P : Ideal R⟦X⟧} (hP : X ∉ P) {k : ℕ} {a : Fin k → R}
-  (haP : P.map (constantCoeff R) = span (range a))
+  (haP : span (range a) = P.map (constantCoeff R))
 
 /- Exctacting `f : Fin k → R⟦X⟧` from `a : Fin k → R` -/
 section f
@@ -150,54 +148,55 @@ theorem P_eq_span_range : P = span (range (f ‹_›)) :=
     (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g ‹_› ‹_› ‹_›⟩)
     (span_le.2 <| range_subset_iff.2 <| f_mem_P ‹_›)
 
-set_option pp.proofs true
-
 theorem foo {S : Set R} (hSP : span S = P⁰) (hS : S.Finite) :
-    ∃ T, span T = P ∧ T.ncard = S.ncard := by
+    ∃ T, P = span T ∧ T.ncard = S.ncard := by
   obtain ⟨k, a, a_injective, rfl⟩ := hS.fin_param
-  have := P_eq_span_range ‹_› hSP.symm
-  refine ⟨_, this.symm, ?_⟩
+  have := P_eq_span_range ‹_› hSP
+  refine ⟨_, this, ?_⟩
   apply Eq.symm
-  refine ncard_congr ?_ (fun a ↦ ?_) ?_ ?_
-  <;> sorry
+  refine ncard_congr (fun _ h ↦ f ‹_› <| (mem_range.1 h).choose) (fun _ _ ↦ by simp) ?_ ?_
+  · intro ai aj hai haj
+    simp
+    sorry
+  · intro fi hfi
+    sorry
 
 end X_not_mem_P
 
 
-section Kaplansky13_6
+section final_theorems
 
-instance Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
-    UniqueFactorizationMonoid R⟦X⟧ :=  by
+instance [hR : IsPrincipalIdealRing R] [IsDomain R] : UniqueFactorizationMonoid R⟦X⟧ := by
   apply (uniqueFactorizationMonoid_iff ⟨_, X_prime⟩).2
-  intro P P_ne_bot P_prime
-  by_cases hxP : X ∈ P
-  · exact ⟨_, hxP, X_prime⟩
-  · obtain ⟨_, ha⟩ := (principal_R.principal (P⁰)).principal'
-    obtain ⟨_, rfl, hT⟩ := foo hxP ha.symm (finite_singleton _)
-    simp only [ncard_singleton, ncard_eq_one] at hT
-    obtain ⟨f, rfl⟩ := hT
-    exact ⟨_, subset_span (by simp),
-      (span_singleton_prime (fun hf0 ↦ P_ne_bot (by simp [hf0]))).1 P_prime⟩
+  intro P _ _
+  by_cases X ∈ P
+  · exact ⟨X, ‹_›, X_prime⟩
+  · obtain ⟨_, _⟩ := (hR.principal (P⁰)).principal'
+    obtain ⟨_, rfl, h⟩ := foo ‹_› (Eq.symm ‹_›) (finite_singleton _)
+    simp only [ncard_singleton, ncard_eq_one] at h
+    obtain ⟨_, rfl⟩ := h
+    exact ⟨_, subset_span (mem_singleton _),
+      (span_singleton_prime (span_singleton_eq_bot.not.1 ‹_›)).1 ‹_›⟩
 
-end Kaplansky13_6
+lemma prime_fg_iff {P : Ideal R⟦X⟧} [P.IsPrime] : P.FG ↔ (P⁰).FG := by
+  constructor
+  · exact (FG.map · _)
+  · intro ⟨S, hS⟩
+    by_cases X ∈ P
+    · have := union_singleton ▸ bar ‹_› ‹_›
+      have : (insert X <| (C R)'' S).Finite := Finite.insert X <| Finite.image _ S.finite_toSet
+      lift insert X <| (C R)'' S to Finset R⟦X⟧ using this with T hT
+      exact ⟨T, hT ▸ this.symm⟩
+    · obtain ⟨T, hT₁, hT₂⟩ := foo ‹_› ‹_› S.finite_toSet
+      have : T.Finite := by
+        sorry
+      lift T to Finset R⟦X⟧ using this
+      exact ⟨T, hT₁.symm⟩
+
+instance [IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ :=
+  is_noetherian_of_prime_ideals_fg fun P _ ↦
+    prime_fg_iff.2 <| (isNoetherianRing_iff_ideal_fg R).1 ‹_› (P⁰)
+
+end final_theorems
 
 end
-
-variable {R : Type*} [CommRing R] {P : Ideal R⟦X⟧} [P.IsPrime]
-
-
-
-
-lemma p_fg_iff (P : Ideal R⟦X⟧)  [P.IsPrime]: P.FG ↔ (Ideal.map (constantCoeff R) P).FG :=
-  sorry
-
-
-
-
-instance [hR : IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ := by
-  apply is_noetherian_of_prime_ideals_fg
-  intro P hP
-  apply (p_fg_iff P ).2
-  have := isNoetherian_def.1 hR
-  specialize this (Ideal.map (constantCoeff R) P)
-  assumption

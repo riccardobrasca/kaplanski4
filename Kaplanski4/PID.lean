@@ -148,24 +148,29 @@ theorem P_eq_span_range : P = span (range (f ‹_›)) :=
     (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g ‹_› ‹_› ‹_›⟩)
     (span_le.2 <| range_subset_iff.2 <| f_mem_P ‹_›)
 
-theorem foo {S : Set R} (hSP : span S = P⁰) (hS : S.Finite) :
+theorem foo {S : Set R} (_ : span S = P⁰) (_ : S.Finite) :
     ∃ T, P = span T ∧ T.Finite ∧ T.ncard = S.ncard := by
-  obtain ⟨k, a, a_injective, rfl⟩ := hS.fin_param
-  have := P_eq_span_range ‹_› hSP
+  obtain ⟨k, a, a_injective, rfl⟩ := Finite.fin_param ‹_›
+  have := P_eq_span_range ‹_› ‹_›
   refine ⟨_, this, finite_range _, ?_⟩
-  apply Eq.symm
-  refine ncard_congr (fun _ h ↦ f ‹_› (mem_range.1 h).choose) ?_ ?_ ?_
-  · intro _ _
-    exact mem_range_self _
-  · intro ai aj hai haj hf
-    replace hai := (mem_range.1 hai).choose_spec
-    replace haj := (mem_range.1 haj).choose_spec
-    have := congrArg (constantCoeff R) hf
-    simpa [hfa, hai, haj]
-  · intro fi hfi
-    obtain ⟨i, hi⟩ := (mem_range.1 hfi)
-    use a i, mem_range_self i
-    sorry
+  have h₁ : (range a).ncard = k := by
+    refine ncard_eq_of_bijective (a ⟨·, ·⟩) ?_ ?_ ?_
+    · intro _ _
+      obtain ⟨i, _⟩ := mem_range.1 ‹_›
+      use i.1, i.2
+    · exact fun _ _ ↦ mem_range_self _
+    · exact fun _ _ _ _ _ ↦ Fin.mk_eq_mk.1 (a_injective ‹_›)
+  have h₂ : (range (f ‹_›)).ncard = k := by
+    refine ncard_eq_of_bijective (f ‹_› ⟨·, ·⟩) ?_ ?_ ?_
+    · intro _ _
+      obtain ⟨i, _⟩ := mem_range.1 ‹_›
+      use i.1, i.2
+    · exact fun _ _ ↦ mem_range_self _
+    · intro _ _ _ _ this
+      replace := congrArg (constantCoeff R) this
+      simp [hfa] at this
+      exact Fin.mk_eq_mk.1 (a_injective ‹_›)
+  rw [h₁, h₂]
 
 end X_not_mem_P
 

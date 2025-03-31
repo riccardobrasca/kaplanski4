@@ -26,7 +26,7 @@ theorem cohen_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ S R) (hC₂ : IsChain (
     intro ⟨G, hG⟩
     have : ∃ I ∈ C, G.toSet ⊆ I := by
       refine hC₂.directedOn.exists_mem_subset_of_finset_subset_biUnion ‹_› (fun x hx ↦ ?_)
-      obtain ⟨I, hIC, h⟩ := (Submodule.mem_sSup_of_directed ‹_› hC₂.directedOn).1 <|
+      obtain ⟨I, _, _⟩ := (Submodule.mem_sSup_of_directed ‹_› hC₂.directedOn).1 <|
         hG ▸ subset_span ‹_›
       exact Set.mem_biUnion ‹_› ‹_›
     obtain ⟨I, I_mem_C, hGI⟩ := this

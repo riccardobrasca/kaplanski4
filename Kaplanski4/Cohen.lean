@@ -27,14 +27,14 @@ theorem cohen_zorn_lemma (C : Set (Ideal R)) (hC : C ⊆ S R) (hC₂ : IsChain (
     have : ∃ I ∈ C, G.toSet ⊆ I := by
       refine hC₂.directedOn.exists_mem_subset_of_finset_subset_biUnion ‹_› (fun x hx ↦ ?_)
       obtain ⟨I, hIC, h⟩ := (Submodule.mem_sSup_of_directed ‹_› hC₂.directedOn).1 <|
-        hG ▸ subset_span hx
-      exact Set.mem_biUnion hIC h
+        hG ▸ subset_span ‹_›
+      exact Set.mem_biUnion ‹_› ‹_›
     obtain ⟨I, I_mem_C, hGI⟩ := this
-    have := hG ▸ Ideal.span_le.2 hGI
-    have : sSup C = I := LE.le.antisymm this (le_sSup I_mem_C)
-    refine hC I_mem_C ⟨G, this ▸ hG⟩
+    have := hG ▸ Ideal.span_le.2 ‹_›
+    have : sSup C = I := LE.le.antisymm (hG ▸ Ideal.span_le.2 ‹_›) (le_sSup ‹_›)
+    refine hC I_mem_C ⟨G, this ▸ ‹_›⟩
   · rw [Set.not_nonempty_iff_eq_empty.1 ‹¬C.Nonempty›]
-    obtain ⟨_, _⟩ := (Set.nonempty_def.1 <| nonempty_S h)
+    obtain ⟨_, _⟩ := (Set.nonempty_def.1 <| nonempty_S ‹_›)
     exact ⟨_, ‹_›, by simp⟩
 
 

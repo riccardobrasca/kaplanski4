@@ -1,5 +1,6 @@
 import Mathlib
 import Kaplanski4.Kaplanski
+import Kaplanski4.Cohen
 
 open PowerSeries Ideal Set BigOperators Finset
 
@@ -59,11 +60,9 @@ theorem bar : I = span ((C R)'' S ∪ {X}) := by
 theorem bar' [Nontrivial R] (_ : S.Finite) : ∃ T, I = span T ∧ T.ncard = S.ncard + 1 := by
   have := bar ‹_› ‹_›
   refine ⟨_, ‹_›, ?_⟩
-  have := injOn_of_injective C_injective (s := S)
-  rw [ncard_eq_succ <| finite_union.2 ⟨(finite_image_iff ‹_›).2 ‹_›, finite_singleton _⟩]
-  use X, (C R)'' S
-  exact ⟨fun ⟨_, _, aX⟩ ↦ by simpa using congrArg (coeff R 1) aX, union_singleton.symm,
-    (ncard_image_iff ‹_›).2 ‹_›⟩
+  have : X ∉ (C R)'' S := fun ⟨_, _, h⟩ ↦ by simpa using congrArg (coeff R 1) h
+  rw [← ncard_image_of_injective S C_injective, union_singleton,
+    ncard_insert_of_not_mem ‹_› (Finite.image _ ‹_›)]
 
 end X_mem_I
 
@@ -71,46 +70,57 @@ end X_mem_I
 section X_not_mem_P
 
 variable {P : Ideal R⟦X⟧} (hP : X ∉ P) {k : ℕ} {a : Fin k → R}
-  (haP : P.map (constantCoeff R) = span (range a)) {g : R⟦X⟧} (hg : g ∈ P)
-include haP
+  (haP : span (range a) = P.map (constantCoeff R))
 
-lemma exists_f i : ∃ f ∈ P, f⁰ = a i := mem_I0_iff.1 <| haP ▸ subset_span (mem_range_self i)
+/- Exctacting `f : Fin k → R⟦X⟧` from `a : Fin k → R` -/
+section f
+
+include haP in
+lemma exists_f : ∀ i, ∃ f ∈ P, f⁰ = a i :=
+  fun i ↦ mem_I0_iff.1 <| haP ▸ subset_span (mem_range_self i)
 
 def f i := (exists_f haP i).choose
 
-lemma f_mem_P i : f haP i ∈ P := (exists_f haP i).choose_spec.1
+lemma f_mem_P : ∀ i, f haP i ∈ P := fun i ↦ (exists_f haP i).choose_spec.1
 
-lemma hfa i : (f haP i)⁰ = a i := (exists_f haP i).choose_spec.2
+lemma hfa : ∀ i, (f haP i)⁰ = a i := fun i ↦ (exists_f haP i).choose_spec.2
 
-include hg in
-lemma exists_r : ∃ r : Fin k → R, ∑ i, r i • a i = (constantCoeff R) g :=
-  (mem_span_range_iff_exists_fun R).1 (haP ▸ f0_mem hg : _ ∈ span (range a))
+end f
 
-def r : Fin k → R := (exists_r haP hg).choose
+variable {g : R⟦X⟧} (hg : g ∈ P)
 
-lemma hr : ∑ i, (r haP hg) i * a i = g⁰ := (exists_r haP hg).choose_spec
+include haP hg in
+lemma exists_r : ∃ r : Fin k → R, ∑ i, r i * a i = g⁰ :=
+  mem_ideal_span_range_iff_exists_fun.1 (haP ▸ f0_mem ‹_›)
+
+def r : Fin k → R := (exists_r ‹_› hg).choose
+
+lemma hr : ∑ i, r ‹_› hg i * a i = g⁰ := (exists_r ‹_› ‹_›).choose_spec
+
+/- We now want to show that g = ∑ i, h i * f i for some `h : Fin k → R⟦X⟧` -/
 
 variable [P_prime : P.IsPrime]
+include hP
 
 def g' : ℕ → P
 | 0 => ⟨g, hg⟩
 | n + 1 =>
-  ⟨mk fun p ↦ coeff R (p + 1) (g' n) - ∑ i, r haP (g' n).2 i * coeff R (p + 1) (f haP i), by
-    have := sub_const_eq_X_mul_shift ((g' n).1 - ∑ i, C R (r haP (g' n).2 i) * f haP i)
-    simp only [map_sub, map_sum, _root_.map_mul, constantCoeff_C, hfa, hr haP (g' n).2, sub_self,
-      map_zero, sub_zero, coeff_C_mul] at this
-    have hf : ∑ i, C R (r haP (g' n).2 i) * f haP i ∈ P :=
-      P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P haP i)
-    exact  (P_prime.mul_mem_iff_mem_or_mem.1 (this ▸ P.sub_mem (g' n).2 hf)).resolve_left hP⟩
+  ⟨mk fun p ↦ coeff R (p + 1) (g' n) - ∑ i, r ‹_› (g' n).2 i * coeff R (p + 1) (f ‹_› i), by
+    have h := sub_const_eq_X_mul_shift ((g' n).1 - ∑ i, C R (r ‹_› (g' n).2 i) * f ‹_› i)
+    simp only [map_sub, map_sum, _root_.map_mul, constantCoeff_C, hfa, hr, sub_self, map_zero,
+      sub_zero, coeff_C_mul] at h
+    have : ∑ i, C R (r ‹_› (g' n).2 i) * f ‹_› i ∈ P :=
+      P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P ‹_› i)
+    exact (P_prime.mul_mem_iff_mem_or_mem.1 (h ▸ P.sub_mem (g' n).2 ‹_›)).resolve_left hP⟩
 
-lemma hg' (n : ℕ) : (g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i =
-    X * (g' hP haP hg (n + 1)).1 := by
-  simpa [hr haP (g' hP haP hg n).2, hfa] using sub_const_eq_X_mul_shift
+lemma hg' (n : ℕ) : (g' ‹_› ‹_› ‹_› n).1 - ∑ i, C R (r ‹_› (g' ‹_› ‹_› ‹_› n).2 i) * f ‹_› i =
+    X * (g' ‹_› ‹_› ‹_› (n + 1)).1 := by
+  simpa [hr, hfa] using sub_const_eq_X_mul_shift
     ((g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i)
 
-def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r haP (g' hP haP hg n).2 i
+def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r ‹_› (g' ‹_› ‹_› ‹_› n).2 i
 
-lemma key (n : ℕ) : g - ∑ i, trunc n ((h hP haP hg) i) * f haP i = X ^ n * (g' hP haP hg n).1 := by
+lemma key (n : ℕ) : g - ∑ i, trunc n (h ‹_› ‹_› hg i) * f haP i = X ^ n * (g' ‹_› ‹_› ‹_› n).1 := by
   induction n with
   | zero => simp [g']
   | succ n H =>
@@ -122,64 +132,78 @@ lemma key (n : ℕ) : g - ∑ i, trunc n ((h hP haP hg) i) * f haP i = X ^ n * (
     simp only [h, coeff_mk, hg']
     ring
 
-lemma sum_h_eq_g : ∑ i, (h hP haP hg) i * f haP i = g := by
+lemma sum_h_eq_g : ∑ i, h ‹_› ‹_› ‹_› i * f ‹_› i = g := by
   refine (sub_eq_zero.1 ?_).symm
   ext n
   conv =>
     enter [1, 2, 2, 2, i]
-    rw [eq_trunc_add_X_pow_mul (h hP haP hg i) (n + 1), add_mul, mul_assoc]
+    rw [eq_trunc_add_X_pow_mul (h ‹_› ‹_› ‹_› i) (n + 1), add_mul, mul_assoc]
   rw [sum_add_distrib, sub_add_eq_sub_sub, key, ← mul_sum]
   simp [coeff_X_pow_mul']
 
-include hP in
-theorem P_eq_span_range : P = span (range (f haP)) :=
-  le_antisymm
-    (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g hP haP hg⟩)
-    <| span_le.2 <| range_subset_iff.2 <| f_mem_P haP
+/- We show that P is finitely generated  -/
 
-omit haP in
-theorem foo {S : Set R} (hS : S.Finite) (hPX : X ∉ P)
-    (hSP : span S = P.map (constantCoeff R)) :
-    ∃ T : Set R⟦X⟧, span T = P ∧ T.ncard = S.ncard := by
-  sorry
+theorem P_eq_span_range : P = span (range (f ‹_›)) :=
+  le_antisymm
+    (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g ‹_› ‹_› ‹_›⟩)
+    (span_le.2 <| range_subset_iff.2 <| f_mem_P ‹_›)
+
+theorem foo {S : Set R} (_ : span S = P⁰) (_ : S.Finite) :
+    ∃ T, P = span T ∧ T.Finite ∧ T.ncard = S.ncard := by
+  obtain ⟨k, a, a_injective, rfl⟩ := Finite.fin_param ‹_›
+  have := P_eq_span_range ‹_› ‹_›
+  refine ⟨_, this, finite_range _, ?_⟩
+  have h₁ : (range a).ncard = k := by
+    refine ncard_eq_of_bijective (a ⟨·, ·⟩) ?_ ?_ ?_
+    · intro _ ⟨i, _⟩
+      use i.1, i.2
+    · exact fun _ _ ↦ mem_range_self _
+    · exact fun _ _ _ _ _ ↦ Fin.mk_eq_mk.1 (a_injective ‹_›)
+  have h₂ : (range (f ‹_›)).ncard = k := by
+    refine ncard_eq_of_bijective (f ‹_› ⟨·, ·⟩) ?_ ?_ ?_
+    · intro _ ⟨i, _⟩
+      use i.1, i.2
+    · exact fun _ _ ↦ mem_range_self _
+    · intro _ _ _ _ this
+      replace := congrArg (constantCoeff R) this
+      simp [hfa] at this
+      exact Fin.mk_eq_mk.1 (a_injective ‹_›)
+  rw [h₁, h₂]
 
 end X_not_mem_P
 
 
-section Kaplansky13_6
+section final_theorems
 
-instance Kaplansky13_6 [principal_R : IsPrincipalIdealRing R] [IsDomain R]  :
-    UniqueFactorizationMonoid R⟦X⟧ :=  by
+instance [hR : IsPrincipalIdealRing R] [IsDomain R] : UniqueFactorizationMonoid R⟦X⟧ := by
   apply (uniqueFactorizationMonoid_iff ⟨_, X_prime⟩).2
-  intro P P_ne_bot P_prime
-  by_cases hxP : X ∈ P
-  · exact ⟨_, hxP, X_prime⟩
-  · obtain ⟨_, ha⟩ := (principal_R.principal (P⁰)).principal'
-    obtain ⟨_, rfl, hT⟩ := foo (finite_singleton _) hxP ha.symm
-    simp only [ncard_singleton, ncard_eq_one] at hT
-    obtain ⟨f, rfl⟩ := hT
-    exact ⟨_, subset_span (by simp),
-      (span_singleton_prime (fun hf0 ↦ P_ne_bot (by simp [hf0]))).1 P_prime⟩
+  intro P _ _
+  by_cases X ∈ P
+  · exact ⟨X, ‹_›, X_prime⟩
+  · obtain ⟨_, _⟩ := (hR.principal (P⁰)).principal'
+    obtain ⟨_, rfl, _, h⟩ := foo ‹_› (Eq.symm ‹_›) (finite_singleton _)
+    simp only [ncard_singleton, ncard_eq_one] at h
+    obtain ⟨_, rfl⟩ := h
+    exact ⟨_, mem_span_singleton_self _,
+      (span_singleton_prime (span_singleton_eq_bot.not.1 ‹_›)).1 ‹_›⟩
 
-end Kaplansky13_6
+lemma prime_fg_iff {P : Ideal R⟦X⟧} [P.IsPrime] : P.FG ↔ (P⁰).FG := by
+  constructor
+  · exact (FG.map · _)
+  · intro ⟨S, _⟩
+    by_cases X ∈ P
+    · have := union_singleton ▸ bar ‹_› ‹_›
+      have : (insert X <| (C R)'' S).Finite := Finite.insert X <| Finite.image _ S.finite_toSet
+      lift insert X <| (C R)'' S to Finset R⟦X⟧ using this with T hT
+      exact ⟨T, hT ▸ this.symm⟩
+    · obtain ⟨T, hT, hT₂, _⟩ := foo ‹_› ‹_› S.finite_toSet
+      lift T to Finset R⟦X⟧ using hT₂
+      exact ⟨T, hT.symm⟩
+
+instance [IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ :=
+  is_noetherian_of_prime_ideals_fg fun P _ ↦
+    prime_fg_iff.2 <| (isNoetherianRing_iff_ideal_fg R).1 ‹_› (P⁰)
+
+end final_theorems
 
 end
-
-variable {R : Type*} [CommRing R] {P : Ideal R⟦X⟧} [P.IsPrime]
-
--- Le théorème est censé être dans mathlib mais je ne l'ai pas trouvé.
-lemma is_noetherian_of_prime_ideals_fg
-  (h : ∀ (P : Ideal R), P.IsPrime → P.FG) : IsNoetherianRing R :=
-  sorry
-
-lemma p_fg_iff (P : Ideal R⟦X⟧)  [P.IsPrime]: P.FG ↔ (Ideal.map (constantCoeff R) P).FG :=
-  sorry
-
-
-instance [hR : IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ := by
-  apply is_noetherian_of_prime_ideals_fg
-  intro P hP
-  apply (p_fg_iff P ).2
-  have := isNoetherian_def.1 hR
-  specialize this (Ideal.map (constantCoeff R) P)
-  assumption

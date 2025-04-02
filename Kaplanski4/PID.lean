@@ -155,15 +155,13 @@ theorem foo {S : Set R} (_ : span S = P⁰) (_ : S.Finite) :
   refine ⟨_, this, finite_range _, ?_⟩
   have h₁ : (range a).ncard = k := by
     refine ncard_eq_of_bijective (a ⟨·, ·⟩) ?_ ?_ ?_
-    · intro _ _
-      obtain ⟨i, _⟩ := mem_range.1 ‹_›
+    · intro _ ⟨i, _⟩
       use i.1, i.2
     · exact fun _ _ ↦ mem_range_self _
     · exact fun _ _ _ _ _ ↦ Fin.mk_eq_mk.1 (a_injective ‹_›)
   have h₂ : (range (f ‹_›)).ncard = k := by
     refine ncard_eq_of_bijective (f ‹_› ⟨·, ·⟩) ?_ ?_ ?_
-    · intro _ _
-      obtain ⟨i, _⟩ := mem_range.1 ‹_›
+    · intro _ ⟨i, _⟩
       use i.1, i.2
     · exact fun _ _ ↦ mem_range_self _
     · intro _ _ _ _ this

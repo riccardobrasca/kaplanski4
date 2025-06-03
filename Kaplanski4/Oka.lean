@@ -5,6 +5,8 @@ open Ideal
 -- CommRing à cause de `mem_colon_singleton` mais est ce que ce thm à vraiment besoin de CommRing ?
 variable {R : Type*} [CommRing R]
 
+section base
+
 -- Question 1 : est-ce que ça devrait être une classe ?
 -- Question 2 : (P : Ideal R → Prop) ou (P : Set (Ideal R)) ?
 def IsOka (P : Ideal R → Prop) : Prop :=
@@ -21,3 +23,34 @@ instance {I : Ideal R} {P : Ideal R → Prop} (hP : IsOka P) (hI : Maximal (¬P 
       (fun x hx ↦ mem_colon_singleton.2 <| I.mul_mem_right a hx)
       (fun H ↦ hb <| H ▸ mem_colon_singleton.2 (mul_comm a b ▸ hab))
   exact hI.1 (hP.2 h₁ h₂)
+
+end base
+
+section application
+
+theorem thm₁ {S : Subsemigroup R} (hS : (S : Set R).Nonempty) :
+    IsOka (fun I : Ideal R ↦ (I : Set R) ∩ S ≠ ∅) := by
+  constructor
+  · simp [hS.ne_empty]
+  · intro a I hsup hcolon
+    rw [← Set.nonempty_iff_ne_empty] at hsup hcolon ⊢
+    obtain ⟨x, hxI, hxS⟩ := hsup
+    obtain ⟨y, hyI, hyS⟩ := hcolon
+    use x * y
+    constructor
+    · simp only [SetLike.mem_coe, mem_colon_singleton] at hxI hyI ⊢
+      rw [sup_comm, mem_span_singleton_sup] at hxI
+      obtain ⟨r, i, hi, rfl⟩ := hxI
+      ring_nf
+      exact I.add_mem
+        (by rw [mul_assoc, mul_comm a]; exact I.mul_mem_left _ hyI)
+        (I.mul_mem_right _ hi)
+    · exact S.mul_mem hxS hyS
+
+theorem thm₂ : IsOka (fun I : Ideal R ↦ I.FG) := by
+  sorry
+
+theorem thm₃ : IsOka (fun I : Ideal R ↦ I.IsPrincipal) := by
+  sorry
+
+end application

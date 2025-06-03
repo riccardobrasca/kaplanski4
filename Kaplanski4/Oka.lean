@@ -10,10 +10,11 @@ section base
 -- Question 1 : est-ce que ça devrait être une classe ?
 -- Question 2 : (P : Ideal R → Prop) ou (P : Set (Ideal R)) ?
 def IsOka (P : Ideal R → Prop) : Prop :=
-  P ⊤ ∧ (∀ {a : R}, ∀ {I : Ideal R}, P (I ⊔ span {a}) → P (I.colon (span {a})) → P I)
+  P ⊤ ∧ (∀ {a : R} {I : Ideal R}, P (I ⊔ span {a}) → P (I.colon (span {a})) → P I)
 
 -- TODO: lt_sup_iff_not_mem est déprécié au profit de lt_sup_iff_notMem depuis le 23/5/25
-instance {I : Ideal R} {P : Ideal R → Prop} (hP : IsOka P) (hI : Maximal (¬P ·) I) : IsPrime I := by
+instance instIsPrimeOfIsOkaOfMaximalNot {P : Ideal R → Prop} (hP : IsOka P) {I : Ideal R}
+    (hI : Maximal (¬P ·) I) : I.IsPrime := by
   by_contra h
   have I_ne_top : I ≠ ⊤ := fun hI' ↦ hI.1 (hI' ▸ hP.1)
   obtain ⟨a, ha, b, hb, hab⟩ := (not_isPrime_iff.1 h).resolve_left I_ne_top
@@ -24,9 +25,17 @@ instance {I : Ideal R} {P : Ideal R → Prop} (hP : IsOka P) (hI : Maximal (¬P 
       (fun H ↦ hb <| H ▸ mem_colon_singleton.2 (mul_comm a b ▸ hab))
   exact hI.1 (hP.2 h₁ h₂)
 
+theorem IsOka.forall_of_forall_prime {P : Ideal R → Prop} (hP : IsOka P)
+    (hmax : (∃ I, ¬P I) → ∃ I, Maximal (¬P ·) I) : (∀ I, I.IsPrime → P I) → ∀ I, P I := by
+  intro h
+  by_contra!
+  obtain ⟨I, hI⟩ := hmax this
+  exact hI.1 <| h I (instIsPrimeOfIsOkaOfMaximalNot hP hI)
+
 end base
 
 section application
+-- TODO: Une fois fini, il faudra déplacer les résultats de cette section dans les bons fichiers
 
 theorem thm₁ {S : Subsemigroup R} (hS : (S : Set R).Nonempty) :
     IsOka (fun I : Ideal R ↦ (I : Set R) ∩ S ≠ ∅) := by

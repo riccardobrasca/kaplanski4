@@ -59,7 +59,4 @@ theorem thm₁ {S : Subsemigroup R} (hS : (S : Set R).Nonempty) :
 theorem thm₂ : IsOka (fun I : Ideal R ↦ I.FG) := by
   sorry
 
-theorem thm₃ : IsOka (fun I : Ideal R ↦ I.IsPrincipal) := by
-  sorry
-
 end application

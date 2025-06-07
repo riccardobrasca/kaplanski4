@@ -201,8 +201,7 @@ lemma prime_fg_iff {P : Ideal R⟦X⟧} [P.IsPrime] : P.FG ↔ (P⁰).FG := by
       exact ⟨T, hT.symm⟩
 
 instance [IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ :=
-  is_noetherian_of_prime_ideals_fg fun P _ ↦
-    prime_fg_iff.2 <| (isNoetherianRing_iff_ideal_fg R).1 ‹_› (P⁰)
+  IsNoetherianRing.of_prime fun P _ ↦ prime_fg_iff.2 <| (isNoetherianRing_iff_ideal_fg R).1 ‹_› (P⁰)
 
 end final_theorems
 

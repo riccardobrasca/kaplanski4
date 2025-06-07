@@ -1,5 +1,4 @@
 import Mathlib
-import Kaplanski4.Cohen
 
 open Ideal
 
@@ -56,19 +55,5 @@ theorem thm₁ {S : Subsemigroup R} (hS : (S : Set R).Nonempty) :
         (by rw [mul_assoc, mul_comm a]; exact I.mul_mem_left _ hyI)
         (I.mul_mem_right _ hi)
     · exact S.mul_mem hxS hyS
-
-theorem thm₂ : IsOka (fun I : Ideal R ↦ I.FG) := by
-  constructor
-  · exact ⟨{1},by simp⟩
-  · intro a I hsup hcolon
-    obtain ⟨m, f, hf⟩ := Submodule.fg_iff_exists_fin_generating_family.1 hsup
-    rw[sup_comm] at hf
-    have H : ∀ (i : Fin m), ∃ r : R, ∃ p ∈ I, r * a + p = f i := fun _ ↦
-      (mem_span_singleton_sup.1 <| hf ▸ mem_span_range_self)
-    choose! r p HiP Hf using H
-    obtain ⟨n, i, hi⟩ := Submodule.fg_iff_exists_fin_generating_family.1 hcolon
-    simp_all! only [submodule_span_eq]
-
-    sorry
 
 end application

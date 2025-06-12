@@ -24,7 +24,8 @@ noncomputable section
 
 variable {R : Type*} [CommRing R]
 
-lemma mem_map_constantCoeff {I : Ideal R⟦X⟧} {x : R} : x ∈ I.map (constantCoeff R) ↔ ∃ f ∈ I, f.constantCoeff R = x :=
+lemma mem_map_constantCoeff {I : Ideal R⟦X⟧} {x : R} :
+    x ∈ I.map (constantCoeff R) ↔ ∃ f ∈ I, f.constantCoeff R = x :=
   I.mem_map_iff_of_surjective _ constantCoeff_surj
 
 lemma constantCoeff_mem_map_of_mem {I : Ideal R⟦X⟧} {f : R⟦X⟧} :
@@ -49,9 +50,12 @@ include hSI
 theorem eq_span_insert_X : I = span (insert X ((C R)'' S)) := by
   ext f
   rw [mem_span_insert, ← map_span, hSI]
-  exact ⟨fun _ ↦ ⟨mk fun p ↦ coeff R (p + 1) f, C R (f.constantCoeff R),
-        mem_map_of_mem _ (constantCoeff_mem_map_of_mem ‹_›), f.eq_shift_mul_X_add_const⟩,
-      fun ⟨_, _, _, _⟩ ↦ ‹_› ▸ I.add_mem (I.mul_mem_left _ ‹_›) (span_le.2 (map_constantCoeff_subset_self ‹_›) ‹_›)⟩
+  exact ⟨
+    fun _ ↦ ⟨mk fun p ↦ coeff R (p + 1) f, C R (f.constantCoeff R),
+      mem_map_of_mem _ (constantCoeff_mem_map_of_mem ‹_›), f.eq_shift_mul_X_add_const⟩,
+    fun ⟨_, _, _, _⟩ ↦ ‹_› ▸ I.add_mem (I.mul_mem_left _ ‹_›)
+      (span_le.2 (map_constantCoeff_subset_self ‹_›) ‹_›)
+  ⟩
 
 end X_mem_I
 
@@ -102,14 +106,15 @@ private def g' : ℕ → P
       P.sum_mem fun i _ ↦ P.mul_mem_left _ (f_mem_P ‹_› i)
     exact (P_prime.mul_mem_iff_mem_or_mem.1 (h ▸ P.sub_mem (g' n).2 ‹_›)).resolve_left hP⟩
 
-private lemma hg' (n : ℕ) : (g' ‹_› ‹_› ‹_› n).1 - ∑ i, C R (r ‹_› (g' ‹_› ‹_› ‹_› n).2 i) * f ‹_› i =
-    X * (g' ‹_› ‹_› ‹_› (n + 1)).1 := by
+private lemma hg' (n : ℕ) : (g' ‹_› ‹_› ‹_› n).1 - ∑ i, C R (r ‹_› (g' ‹_› ‹_› ‹_› n).2 i) * f ‹_› i
+    = X * (g' ‹_› ‹_› ‹_› (n + 1)).1 := by
   simpa [hr, hfa] using sub_const_eq_X_mul_shift
     ((g' hP haP hg n).1 - ∑ i, C R (r haP (g' hP haP hg n).2 i) * f haP i)
 
 private def h (i : Fin k) : R⟦X⟧ := mk fun n ↦ r ‹_› (g' ‹_› ‹_› ‹_› n).2 i
 
-private lemma key (n : ℕ) : g - ∑ i, trunc n (h ‹_› ‹_› hg i) * f haP i = X ^ n * (g' ‹_› ‹_› ‹_› n).1 := by
+private lemma key (n : ℕ) :
+    g - ∑ i, trunc n (h ‹_› ‹_› hg i) * f haP i = X ^ n * (g' ‹_› ‹_› ‹_› n).1 := by
   induction n with
   | zero => simp [g']
   | succ n H =>
@@ -170,8 +175,8 @@ instance [hR : IsPrincipalIdealRing R] [IsDomain R] : UniqueFactorizationMonoid 
   intro P _ _
   by_cases X ∈ P
   · exact ⟨X, ‹_›, X_prime⟩
-  · obtain ⟨_, _⟩ := (hR.principal (P.map (constantCoeff R))).principal'
-    obtain ⟨_, rfl, _, h⟩ := exist_eq_span_eq_ncard_of_X_notMem ‹_› (Eq.symm ‹_›) (finite_singleton _)
+  · obtain ⟨_, h⟩ := (hR.principal (P.map (constantCoeff R))).principal'
+    obtain ⟨_, rfl, _, h⟩ := exist_eq_span_eq_ncard_of_X_notMem ‹_› (h.symm) (finite_singleton _)
     simp only [ncard_singleton, ncard_eq_one] at h
     obtain ⟨_, rfl⟩ := h
     exact ⟨_, mem_span_singleton_self _,
@@ -191,7 +196,8 @@ lemma prime_fg_iff {P : Ideal R⟦X⟧} [P.IsPrime] : P.FG ↔ (P.map (constantC
       exact ⟨T, hT.symm⟩
 
 instance [IsNoetherianRing R] : IsNoetherianRing R⟦X⟧ :=
-  IsNoetherianRing.of_prime fun P _ ↦ prime_fg_iff.2 <| (isNoetherianRing_iff_ideal_fg R).1 ‹_› (P.map (constantCoeff R))
+  IsNoetherianRing.of_prime fun P _ ↦
+    prime_fg_iff.2 <| (isNoetherianRing_iff_ideal_fg R).1 ‹_› (P.map (constantCoeff R))
 
 end final_theorems
 

@@ -34,8 +34,6 @@ theorem isOka_isPrincipal : IsOka (Submodule.IsPrincipal (R := R)) := by
         span_singleton_mul_span_singleton, mul_comm a, span_singleton_le_iff_mem]
       exact ⟨mul_le_right, mem_colon_singleton.1 <| hy ▸ mem_span_singleton_self y⟩
 
-#check IsPrincipalIdealRing.of_prime
-
 theorem IsPrincipalIdealRing.of_prime' (H : ∀ (P : Ideal R), P.IsPrime → Submodule.IsPrincipal P) :
     IsPrincipalIdealRing R :=
   (isPrincipalIdealRing_iff R).2 <| isOka_isPrincipal.forall_of_forall_prime nonPrincipal_maximal H

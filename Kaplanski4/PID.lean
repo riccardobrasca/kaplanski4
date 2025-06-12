@@ -50,24 +50,17 @@ theorem I0_subset_I : (C R)'' I⁰ ⊆ I := by
 variable {S : Set R} (hSI : span S = I.map (constantCoeff R))
 include hSI
 
-theorem bar : I = span ((C R)'' S ∪ {X}) := by
+theorem span_im_C_union_X : I = span (insert X ((C R)'' S)) := by
   ext f
-  rw [union_singleton, mem_span_insert, ← map_span, hSI]
+  rw [mem_span_insert, ← map_span, hSI]
   exact ⟨fun _ ↦ ⟨mk fun p ↦ coeff R (p + 1) f, C R (f⁰),
         mem_map_of_mem _ (f0_mem ‹_›), f.eq_shift_mul_X_add_const⟩,
       fun ⟨_, _, _, _⟩ ↦ ‹_› ▸ I.add_mem (I.mul_mem_left _ ‹_›) (span_le.2 (I0_subset_I ‹_›) ‹_›)⟩
 
-theorem bar' [Nontrivial R] (_ : S.Finite) : ∃ T, I = span T ∧ T.ncard = S.ncard + 1 := by
-  have := bar ‹_› ‹_›
-  refine ⟨_, ‹_›, ?_⟩
-  have : X ∉ (C R)'' S := fun ⟨_, _, h⟩ ↦ by simpa using congrArg (coeff R 1) h
-  rw [← ncard_image_of_injective S C_injective, union_singleton,
-    ncard_insert_of_not_mem ‹_› (Finite.image _ ‹_›)]
-
 end X_mem_I
 
 
-section X_not_mem_P
+section X_notMem_P
 
 variable {P : Ideal R⟦X⟧} (hP : X ∉ P) {k : ℕ} {a : Fin k → R}
   (haP : span (range a) = P.map (constantCoeff R))
@@ -148,7 +141,7 @@ theorem P_eq_span_range : P = span (range (f ‹_›)) :=
     (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g ‹_› ‹_› ‹_›⟩)
     (span_le.2 <| range_subset_iff.2 <| f_mem_P ‹_›)
 
-theorem foo {S : Set R} (_ : span S = P⁰) (_ : S.Finite) :
+theorem exist_eq_span_eq_ncard_of_X_notMem {S : Set R} (_ : span S = P⁰) (_ : S.Finite) :
     ∃ T, P = span T ∧ T.Finite ∧ T.ncard = S.ncard := by
   obtain ⟨k, a, a_injective, rfl⟩ := Finite.fin_param ‹_›
   have := P_eq_span_range ‹_› ‹_›
@@ -170,7 +163,7 @@ theorem foo {S : Set R} (_ : span S = P⁰) (_ : S.Finite) :
       exact Fin.mk_eq_mk.1 (a_injective ‹_›)
   rw [h₁, h₂]
 
-end X_not_mem_P
+end X_notMem_P
 
 
 section final_theorems
@@ -181,7 +174,7 @@ instance [hR : IsPrincipalIdealRing R] [IsDomain R] : UniqueFactorizationMonoid 
   by_cases X ∈ P
   · exact ⟨X, ‹_›, X_prime⟩
   · obtain ⟨_, _⟩ := (hR.principal (P⁰)).principal'
-    obtain ⟨_, rfl, _, h⟩ := foo ‹_› (Eq.symm ‹_›) (finite_singleton _)
+    obtain ⟨_, rfl, _, h⟩ := exist_eq_span_eq_ncard_of_X_notMem ‹_› (Eq.symm ‹_›) (finite_singleton _)
     simp only [ncard_singleton, ncard_eq_one] at h
     obtain ⟨_, rfl⟩ := h
     exact ⟨_, mem_span_singleton_self _,
@@ -192,11 +185,11 @@ lemma prime_fg_iff {P : Ideal R⟦X⟧} [P.IsPrime] : P.FG ↔ (P⁰).FG := by
   · exact (FG.map · _)
   · intro ⟨S, _⟩
     by_cases X ∈ P
-    · have := union_singleton ▸ bar ‹_› ‹_›
+    · have := span_im_C_union_X ‹_› ‹_›
       have : (insert X <| (C R)'' S).Finite := Finite.insert X <| Finite.image _ S.finite_toSet
       lift insert X <| (C R)'' S to Finset R⟦X⟧ using this with T hT
       exact ⟨T, hT ▸ this.symm⟩
-    · obtain ⟨T, hT, hT₂, _⟩ := foo ‹_› ‹_› S.finite_toSet
+    · obtain ⟨T, hT, hT₂, _⟩ := exist_eq_span_eq_ncard_of_X_notMem ‹_› ‹_› S.finite_toSet
       lift T to Finset R⟦X⟧ using hT₂
       exact ⟨T, hT.symm⟩
 

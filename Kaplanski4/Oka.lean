@@ -37,7 +37,7 @@ end base
 section application
 -- TODO: Une fois fini, il faudra déplacer les résultats de cette section dans les bons fichiers
 
-theorem thm₁ {S : Subsemigroup R} (hS : (S : Set R).Nonempty) :
+theorem isOka_inter_subSemigroup_ne_empty {S : Subsemigroup R} (hS : (S : Set R).Nonempty) :
     IsOka (fun I : Ideal R ↦ (I : Set R) ∩ S ≠ ∅) := by
   constructor
   · simp [hS.ne_empty]

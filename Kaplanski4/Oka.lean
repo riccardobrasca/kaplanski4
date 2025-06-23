@@ -2,8 +2,7 @@ import Mathlib
 
 open Ideal
 
--- CommRing à cause de `mem_colon_singleton` mais est ce que ce thm à vraiment besoin de CommRing ?
-variable {R : Type*} [CommRing R]
+variable {R : Type*} [CommSemiring R]
 
 section base
 
@@ -12,13 +11,12 @@ section base
 def IsOka (P : Ideal R → Prop) : Prop :=
   P ⊤ ∧ (∀ {a : R} {I : Ideal R}, P (I ⊔ span {a}) → P (I.colon (span {a})) → P I)
 
--- TODO: lt_sup_iff_not_mem est déprécié au profit de lt_sup_iff_notMem depuis le 23/5/25
 instance instIsPrimeOfIsOkaOfMaximalNot {P : Ideal R → Prop} (hP : IsOka P) {I : Ideal R}
     (hI : Maximal (¬P ·) I) : I.IsPrime := by
   by_contra h
   have I_ne_top : I ≠ ⊤ := fun hI' ↦ hI.1 (hI' ▸ hP.1)
   obtain ⟨a, ha, b, hb, hab⟩ := (not_isPrime_iff.1 h).resolve_left I_ne_top
-  have h₁ : P (I ⊔ span {a}) := of_not_not <| hI.not_prop_of_gt (Submodule.lt_sup_iff_not_mem.2 ha)
+  have h₁ : P (I ⊔ span {a}) := of_not_not <| hI.not_prop_of_gt (Submodule.lt_sup_iff_notMem.2 ha)
   have h₂ : P (I.colon (span {a})) :=
     of_not_not <| hI.not_prop_of_gt <| lt_of_le_of_ne
       (fun x hx ↦ mem_colon_singleton.2 <| I.mul_mem_right a hx)

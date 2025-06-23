@@ -20,14 +20,14 @@ theorem hypothesis_zorn_lemma [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) (
   by_cases h : C.Nonempty
   · cases' (Set.nonempty_def.1 h) with I hI
     refine' ⟨sSup C, _, fun z hz ↦ le_sSup hz⟩
-    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
+    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_notMem]
     rintro x hx
     rcases (Submodule.mem_sSup_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
     have hx₂ : (J : Set R) ∩ S ≠ ∅ := Set.nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
     exact hx₂ (hC hJ₁)
   · rw [Set.not_nonempty_iff_eq_empty.1 h]
     use ⊥
-    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem]
+    rw [Kaplansky.set_def, Set.eq_empty_iff_forall_notMem]
     simp
     exact hS
 
@@ -47,7 +47,7 @@ section Basic
 theorem ideal_neq_top [Semiring R] {S : Subsemigroup R} (hS : (S : Set R).Nonempty) {P : Ideal R}
     (hP : P ∈ Kaplansky.set S) : P ≠ ⊤ := by
   intro h
-  rw [Kaplansky.set, h, Set.mem_setOf, Set.eq_empty_iff_forall_not_mem] at hP
+  rw [Kaplansky.set, h, Set.mem_setOf, Set.eq_empty_iff_forall_notMem] at hP
   rw [Set.nonempty_def] at hS
   cases' hS with x h₂
   exact hP x (Set.mem_inter (Set.mem_univ x) h₂)
@@ -86,7 +86,7 @@ theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Subsemigroup R
       sup_le (sup_le Ideal.mul_le_right Ideal.mul_le_left)
         (sup_le Ideal.mul_le_right (P.span_singleton_le_iff_mem.2 hxy))
   exact
-    Set.eq_empty_iff_forall_not_mem.1 hP (s * t) ⟨h₃ (Ideal.mul_mem_mul hs ht), S.mul_mem hs' ht'⟩
+    Set.eq_empty_iff_forall_notMem.1 hP (s * t) ⟨h₃ (Ideal.mul_mem_mul hs ht), S.mul_mem hs' ht'⟩
 
 /-- If an ideal P is maximal with respect to the condition P ∩ S = ∅, then it is prime. -/
 theorem isPrime_of_maximal [CommSemiring R] {P : Ideal R} {S : Subsemigroup R}
@@ -121,7 +121,7 @@ theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (h
   rw [← Submonoid.mem_toSubsemigroup] at this
   have := Set.nonempty_def.2 ⟨x, this⟩
   rcases (H T) hT₃ (isPrime_of_maximal this hT hT₂) with ⟨x, H₃, H₄⟩
-  rw [Kaplansky.set_def, Set.eq_empty_iff_forall_not_mem] at hT
+  rw [Kaplansky.set_def, Set.eq_empty_iff_forall_notMem] at hT
   exact hT x ⟨H₃, Submonoid.subset_closure H₄⟩
 
 theorem exists_prime_factors_of_exists_multiset [CommMonoidWithZero R] (a : R)
@@ -131,10 +131,10 @@ theorem exists_prime_factors_of_exists_multiset [CommMonoidWithZero R] (a : R)
   revert a hl hl₂
   refine' l.induction (p := fun l ↦ ∀ a, (∀ y ∈ l, y ∈ {r | IsUnit r ∨ Prime r}) →
     l.prod = a → ∃ (f : Multiset R), (∀ b ∈ f, Prime b) ∧ Associated f.prod a) _ _
-  · simp only [Multiset.not_mem_zero, Set.mem_setOf_eq, IsEmpty.forall_iff, forall_const,
+  · simp only [Multiset.notMem_zero, Set.mem_setOf_eq, IsEmpty.forall_iff, forall_const,
       Multiset.prod_zero, forall_true_left, forall_eq']
     use 0
-    simp only [Multiset.not_mem_zero, IsEmpty.forall_iff, forall_const, Multiset.prod_zero,
+    simp only [Multiset.notMem_zero, IsEmpty.forall_iff, forall_const, Multiset.prod_zero,
       true_and]
     exact Associated.refl 1
   · simp only [Set.mem_setOf_eq, forall_apply_eq_imp_iff, Multiset.mem_cons, forall_eq_or_imp,

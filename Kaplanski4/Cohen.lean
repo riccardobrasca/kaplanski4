@@ -45,8 +45,8 @@ theorem isOka_FG : IsOka (FG (R := R)) := by
       exact ⟨p_mem_I, fun c ↦ mul_comm a _ ▸ mem_colon_singleton.1 (hi ▸ mem_span_range_self)⟩
     · rw [Submodule.mem_sup]
       have : y ∈ span (range f) := hf ▸ Ideal.mem_sup_left hy
-      obtain ⟨s, H⟩ := (mem_span_range_iff_exists_fun R).1 this
-      simp_rw [← Hf, smul_eq_mul] at H
+      obtain ⟨s, H⟩ := mem_span_range_iff_exists_fun.1 this
+      simp_rw [← Hf] at H
       ring_nf at H
       rw [sum_add_distrib, ← sum_mul, add_comm] at H
       refine ⟨(∑ k, s k * p k), sum_mem _ (fun _ _ ↦ mul_mem_left _ _ mem_span_range_self),

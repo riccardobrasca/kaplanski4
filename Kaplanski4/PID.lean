@@ -84,7 +84,7 @@ variable {g : R⟦X⟧} (hg : g ∈ P)
 
 include haP hg in
 private lemma exists_r : ∃ r : Fin k → R, ∑ i, r i * a i = g.constantCoeff R :=
-  mem_ideal_span_range_iff_exists_fun.1 (haP ▸ constantCoeff_mem_map_of_mem ‹_›)
+  mem_span_range_iff_exists_fun.1 (haP ▸ constantCoeff_mem_map_of_mem ‹_›)
 
 private def r : Fin k → R := (exists_r ‹_› hg).choose
 
@@ -139,7 +139,7 @@ private lemma sum_h_eq_g : ∑ i, h ‹_› ‹_› ‹_› i * f ‹_› i = g 
 
 private theorem P_eq_span_range : P = span (range (f ‹_›)) :=
   le_antisymm
-    (fun _ hg ↦ (mem_span_range_iff_exists_fun _).2 ⟨_, sum_h_eq_g ‹_› ‹_› ‹_›⟩)
+    (fun _ hg ↦ mem_span_range_iff_exists_fun.2 ⟨_, sum_h_eq_g ‹_› ‹_› ‹_›⟩)
     (span_le.2 <| range_subset_iff.2 <| f_mem_P ‹_›)
 
 theorem exist_eq_span_eq_ncard_of_X_notMem {S : Set R}
@@ -175,7 +175,7 @@ instance [hR : IsPrincipalIdealRing R] [IsDomain R] : UniqueFactorizationMonoid 
   intro P _ _
   by_cases X ∈ P
   · exact ⟨X, ‹_›, X_prime⟩
-  · obtain ⟨_, h⟩ := (hR.principal (P.map (constantCoeff R))).principal'
+  · obtain ⟨_, h⟩ := (hR.principal (P.map (constantCoeff R))).principal
     obtain ⟨_, rfl, _, h⟩ := exist_eq_span_eq_ncard_of_X_notMem ‹_› (h.symm) (finite_singleton _)
     simp only [ncard_singleton, ncard_eq_one] at h
     obtain ⟨_, rfl⟩ := h
@@ -187,10 +187,10 @@ lemma prime_fg_iff {P : Ideal R⟦X⟧} [P.IsPrime] : P.FG ↔ (P.map (constantC
   · exact (FG.map · _)
   · intro ⟨S, _⟩
     by_cases X ∈ P
-    · have := eq_span_insert_X ‹_› ‹_›
+    · have H := eq_span_insert_X ‹_› ‹_›
       have : (insert X <| (C R)'' S).Finite := Finite.insert X <| Finite.image _ S.finite_toSet
       lift insert X <| (C R)'' S to Finset R⟦X⟧ using this with T hT
-      exact ⟨T, hT ▸ this.symm⟩
+      exact ⟨T, hT ▸ H.symm⟩
     · obtain ⟨T, hT, hT₂, _⟩ := exist_eq_span_eq_ncard_of_X_notMem ‹_› ‹_› S.finite_toSet
       lift T to Finset R⟦X⟧ using hT₂
       exact ⟨T, hT.symm⟩

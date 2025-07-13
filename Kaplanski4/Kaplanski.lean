@@ -132,7 +132,7 @@ theorem exists_prime_factors_of_exists_multiset [CommMonoidWithZero R] (a : R)
   refine' l.induction (p := fun l ↦ ∀ a, (∀ y ∈ l, y ∈ {r | IsUnit r ∨ Prime r}) →
     l.prod = a → ∃ (f : Multiset R), (∀ b ∈ f, Prime b) ∧ Associated f.prod a) _ _
   · simp only [Multiset.notMem_zero, Set.mem_setOf_eq, IsEmpty.forall_iff, forall_const,
-      Multiset.prod_zero, forall_true_left, forall_eq']
+      Multiset.prod_zero, forall_eq']
     use 0
     simp only [Multiset.notMem_zero, IsEmpty.forall_iff, forall_const, Multiset.prod_zero,
       true_and]

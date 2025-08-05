@@ -29,7 +29,7 @@ theorem isOka_FG : IsOka (FG (R := R)) := by
   classical
   constructor
   · exact ⟨{1}, by simp⟩
-  · intro a I hsup hcolon
+  · intro I a hsup hcolon
     obtain ⟨_, f, hf⟩ := Submodule.fg_iff_exists_fin_generating_family.1 hsup
     obtain ⟨_, i, hi⟩ := Submodule.fg_iff_exists_fin_generating_family.1 hcolon
     rw [submodule_span_eq] at hf
@@ -56,4 +56,4 @@ theorem isOka_FG : IsOka (FG (R := R)) := by
       exact (I.add_mem_iff_right <| sum_mem (fun _ _ ↦ mul_mem_left _ _ <| p_mem_I _)).1 (H ▸ hy)
 
 theorem IsNoetherianRing.of_prime : (∀ I : Ideal R, I.IsPrime → I.FG) → IsNoetherianRing R :=
-  (isNoetherianRing_iff_ideal_fg R).2 ∘ isOka_FG.forall_of_forall_prime nonFG_maximal
+  (isNoetherianRing_iff_ideal_fg R).2 ∘ forall_of_forall_prime_isOka isOka_FG nonFG_maximal

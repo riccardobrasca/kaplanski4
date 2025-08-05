@@ -4,20 +4,14 @@ open Ideal
 
 variable {R : Type*} [CommSemiring R]
 
-section base
-
--- Question 1 : est-ce que ça devrait être une classe ?
--- Non, Lean ne peut pas déviner `P`
--- Question 2 : (P : Ideal R → Prop) ou (P : Set (Ideal R)) ?
--- `Ideal R → Prop` c'est très bien
+section base -- PR #27200
 
 def IsOka (P : Ideal R → Prop) : Prop :=
-  P ⊤ ∧ (∀ {a : R} {I : Ideal R}, P (I ⊔ span {a}) → P (I.colon (span {a})) → P I)
+  P ⊤ ∧ (∀ {I : Ideal R} {a : R}, P (I ⊔ span {a}) → P (I.colon (span {a})) → P I)
 
 variable {P : Ideal R → Prop}
 
--- Ça ne peut pas être une instance (le linter le dirait), Lean ne peut pas trouver `hP`
-theorem instIsPrimeOfIsOkaOfMaximalNot (hP : IsOka P) {I : Ideal R}
+theorem Ideal.isPrime_of_maximal_not_isOka (hP : IsOka P) {I : Ideal R}
     (hI : Maximal (¬P ·) I) : I.IsPrime := by
   by_contra h
   have I_ne_top : I ≠ ⊤ := fun hI' ↦ hI.1 (hI' ▸ hP.1)
@@ -29,12 +23,11 @@ theorem instIsPrimeOfIsOkaOfMaximalNot (hP : IsOka P) {I : Ideal R}
       (fun H ↦ hb <| H ▸ mem_colon_singleton.2 (mul_comm a b ▸ hab))
   exact hI.1 (hP.2 h₁ h₂)
 
-theorem IsOka.forall_of_forall_prime (hP : IsOka P)
-    (hmax : (∃ I, ¬P I) → ∃ I, Maximal (¬P ·) I) : (∀ I, I.IsPrime → P I) → ∀ I, P I := by
-  intro h
+theorem Ideal.forall_of_forall_prime_isOka (hP : IsOka P)
+    (hmax : (∃ I, ¬P I) → ∃ I, Maximal (¬P ·) I) (hprime : ∀ I, I.IsPrime → P I) : ∀ I, P I := by
   by_contra!
   obtain ⟨I, hI⟩ := hmax this
-  exact hI.1 <| h I (instIsPrimeOfIsOkaOfMaximalNot hP hI)
+  exact hI.1 <| hprime I (isPrime_of_maximal_not_isOka hP hI)
 
 end base
 
@@ -45,7 +38,7 @@ theorem isOka_inter_subSemigroup_ne_empty {S : Subsemigroup R} (hS : (S : Set R)
     IsOka (fun I : Ideal R ↦ (I : Set R) ∩ S ≠ ∅) := by
   constructor
   · simp [hS.ne_empty]
-  · intro a I hsup hcolon
+  · intro I a hsup hcolon
     rw [← Set.nonempty_iff_ne_empty] at hsup hcolon ⊢
     obtain ⟨x, hxI, hxS⟩ := hsup
     obtain ⟨y, hyI, hyS⟩ := hcolon

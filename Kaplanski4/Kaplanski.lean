@@ -88,6 +88,7 @@ theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Subsemigroup R
   exact
     Set.eq_empty_iff_forall_notMem.1 hP (s * t) ⟨h₃ (Ideal.mul_mem_mul hs ht), S.mul_mem hs' ht'⟩
 
+-- NOTE: This already exist in mathlib as Ideal.isPrime_of_maximally_disjoint
 /-- If an ideal P is maximal with respect to the condition P ∩ S = ∅, then it is prime. -/
 theorem isPrime_of_maximal [CommSemiring R] {P : Ideal R} {S : Subsemigroup R}
     (hS : (S : Set R).Nonempty) (hP : P ∈ Kaplansky.set S)

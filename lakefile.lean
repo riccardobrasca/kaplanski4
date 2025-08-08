@@ -20,7 +20,7 @@ def weakLeanArgs : Array String :=
   else
     #[]
 
-package «flt-regular» where
+package Kaplansky4 where
   leanOptions := #[
     ⟨`relaxedAutoImplicit, false⟩, -- prevents typos to be interpreted as new free variables
     ⟨`pp.unicode.fun, true⟩, -- pretty-prints `fun a ↦ b`

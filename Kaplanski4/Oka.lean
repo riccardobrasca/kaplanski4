@@ -4,7 +4,7 @@ open Ideal
 
 variable {R : Type*} [CommSemiring R]
 
-section base -- PR #27200
+namespace AddedToMathlib -- PR #27200
 
 def IsOka (P : Ideal R → Prop) : Prop :=
   P ⊤ ∧ (∀ {I : Ideal R} {a : R}, P (I ⊔ span {a}) → P (I.colon (span {a})) → P I)
@@ -29,7 +29,7 @@ theorem Ideal.forall_of_forall_prime_isOka (hP : IsOka P)
   obtain ⟨I, hI⟩ := hmax this
   exact hI.1 <| hprime I (isPrime_of_maximal_not_isOka hP hI)
 
-end base
+end AddedToMathlib
 
 section application
 -- TODO: Une fois fini, il faudra déplacer les résultats de cette section dans les bons fichiers

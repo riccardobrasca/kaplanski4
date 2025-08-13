@@ -56,4 +56,4 @@ theorem isOka_FG : IsOka (FG (R := R)) := by
       exact (I.add_mem_iff_right <| sum_mem (fun _ _ ↦ mul_mem_left _ _ <| p_mem_I _)).1 (H ▸ hy)
 
 theorem IsNoetherianRing.of_prime : (∀ I : Ideal R, I.IsPrime → I.FG) → IsNoetherianRing R :=
-  (isNoetherianRing_iff_ideal_fg R).2 ∘ forall_of_forall_prime_isOka isOka_FG nonFG_maximal
+  (isNoetherianRing_iff_ideal_fg R).2 ∘ isOka_FG.forall_of_forall_prime_isOka nonFG_maximal

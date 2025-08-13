@@ -14,7 +14,7 @@ theorem nonPrincipal_maximal :
 theorem isOka_isPrincipal : IsOka (Submodule.IsPrincipal (R := R)) := by
   constructor
   · exact ⟨1, by simp⟩
-  · intro a I ⟨x, hx⟩ ⟨y, hy⟩
+  · intro I a ⟨x, hx⟩ ⟨y, hy⟩
     use x * y
     rw [submodule_span_eq] at *
     apply le_antisymm
@@ -36,4 +36,5 @@ theorem isOka_isPrincipal : IsOka (Submodule.IsPrincipal (R := R)) := by
 
 theorem IsPrincipalIdealRing.of_prime' (H : ∀ (P : Ideal R), P.IsPrime → Submodule.IsPrincipal P) :
     IsPrincipalIdealRing R :=
-  (isPrincipalIdealRing_iff R).2 <| isOka_isPrincipal.forall_of_forall_prime nonPrincipal_maximal H
+  (isPrincipalIdealRing_iff R).2 <|
+    isOka_isPrincipal.forall_of_forall_prime_isOka nonPrincipal_maximal H

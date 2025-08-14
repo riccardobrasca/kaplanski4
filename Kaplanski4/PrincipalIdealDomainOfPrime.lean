@@ -36,5 +36,4 @@ theorem isOka_isPrincipal : IsOka (Submodule.IsPrincipal (R := R)) := by
 
 theorem IsPrincipalIdealRing.of_prime' (H : ∀ (P : Ideal R), P.IsPrime → Submodule.IsPrincipal P) :
     IsPrincipalIdealRing R :=
-  (isPrincipalIdealRing_iff R).2 <|
-    isOka_isPrincipal.forall_of_forall_prime_isOka nonPrincipal_maximal H
+  ⟨isOka_isPrincipal.forall_of_forall_prime_isOka nonPrincipal_maximal H⟩

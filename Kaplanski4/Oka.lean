@@ -32,25 +32,20 @@ theorem Ideal.forall_of_forall_prime_isOka (hP : IsOka P)
 end AddedToMathlib
 
 section application
--- TODO: Une fois fini, il faudra déplacer les résultats de cette section dans les bons fichiers
 
-theorem isOka_inter_subSemigroup_ne_empty {S : Subsemigroup R} (hS : (S : Set R).Nonempty) :
-    IsOka (fun I : Ideal R ↦ (I : Set R) ∩ S ≠ ∅) := by
-  constructor
-  · simp [hS.ne_empty]
-  · intro I a hsup hcolon
-    rw [← Set.nonempty_iff_ne_empty] at hsup hcolon ⊢
-    obtain ⟨x, hxI, hxS⟩ := hsup
-    obtain ⟨y, hyI, hyS⟩ := hcolon
-    use x * y
-    constructor
-    · simp only [SetLike.mem_coe, mem_colon_singleton] at hxI hyI ⊢
-      rw [sup_comm, mem_span_singleton_sup] at hxI
-      obtain ⟨r, i, hi, rfl⟩ := hxI
-      rw [add_mul]
-      exact I.add_mem
-        (by rw [mul_assoc, mul_comm a]; exact I.mul_mem_left _ hyI)
-        (I.mul_mem_right _ hi)
-    · exact S.mul_mem hxS hyS
+-- Combine with Ideal.IsOka.isPrime_of_maximal_not to golf Ideal.isPrime_of_maximally_disjoint
+theorem isOka_disjoint_subsemigroup {S : Subsemigroup R} (hS : (S : Set R).Nonempty) :
+    IsOka (fun I : Ideal R ↦ ¬ Disjoint (I : Set R) S) where
+  top := by simp [hS.ne_empty]
+  oka := by
+    simp_rw [Set.not_disjoint_iff]
+    intro I a ⟨x, hxI, hxS⟩ ⟨y, hyI, hyS⟩
+    refine ⟨x * y, ?_, S.mul_mem hxS hyS⟩
+    simp only [SetLike.mem_coe, mem_colon_singleton] at hxI hyI ⊢
+    obtain ⟨r, i, hi, rfl⟩ := mem_span_singleton_sup.1 (sup_comm I _ ▸ hxI)
+    rw [add_mul]
+    exact I.add_mem
+      (by rw [mul_assoc, mul_comm a]; exact I.mul_mem_left _ hyI)
+      (I.mul_mem_right _ hi)
 
 end application

@@ -5,8 +5,7 @@ open Ideal Set BigOperators Finset
 
 variable {R : Type*} [CommRing R]
 
-theorem nonFG_maximal : (∃ I : Ideal R, ¬I.FG) → ∃ I : Ideal R, Maximal (¬FG ·) I := by
-  intro ⟨I, hI⟩
+theorem nonFG_maximal (I : Ideal R) (hI : ¬I.FG) : ∃ I : Ideal R, Maximal (¬FG ·) I := by
   apply zorn_le₀
   intro C hC hC₂
   by_cases h : C.Nonempty
@@ -56,4 +55,4 @@ theorem isOka_FG : IsOka (FG (R := R)) := by
       exact (I.add_mem_iff_right <| sum_mem (fun _ _ ↦ mul_mem_left _ _ <| p_mem_I _)).1 (H ▸ hy)
 
 theorem IsNoetherianRing.of_prime : (∀ I : Ideal R, I.IsPrime → I.FG) → IsNoetherianRing R :=
-  (isNoetherianRing_iff_ideal_fg R).2 ∘ isOka_FG.forall_of_forall_prime_isOka nonFG_maximal
+  (isNoetherianRing_iff_ideal_fg R).2 ∘ isOka_FG.forall_of_forall_prime nonFG_maximal

@@ -18,7 +18,7 @@ theorem hypothesis_zorn_lemma [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) (
     (hC : C ⊆ Kaplansky.set S) (hC₂ : IsChain (· ≤ ·) C) :
     ∃ P, P ∈ Kaplansky.set S ∧ ∀ J, J ∈ C → J ≤ P := by
   by_cases h : C.Nonempty
-  · cases' (Set.nonempty_def.1 h) with I hI
+  · obtain ⟨I, hI⟩ := h
     refine' ⟨sSup C, _, fun z hz ↦ le_sSup hz⟩
     rw [Kaplansky.set_def, Set.eq_empty_iff_forall_notMem]
     rintro x hx
@@ -49,7 +49,7 @@ theorem ideal_neq_top [Semiring R] {S : Subsemigroup R} (hS : (S : Set R).Nonemp
   intro h
   rw [Kaplansky.set, h, Set.mem_setOf, Set.eq_empty_iff_forall_notMem] at hP
   rw [Set.nonempty_def] at hS
-  cases' hS with x h₂
+  obtain ⟨x, h₂⟩ := hS
   exact hP x (Set.mem_inter (Set.mem_univ x) h₂)
 
 theorem exists_mem_inter [Semiring R] {S : Subsemigroup R} {P : Ideal R} {I : Ideal R}
@@ -64,9 +64,8 @@ theorem mem_or_mem_of_mul_mem [CommSemiring R] {P : Ideal R} {S : Subsemigroup R
     (hP : P ∈ Kaplansky.set S) (hmax : ∀ I ∈ Kaplansky.set S, P ≤ I → I = P) :
     x * y ∈ P → x ∈ P ∨ y ∈ P := by
   intro hxy
-  by_contra h
-  push_neg at h
-  cases' h with h' h''
+  by_contra! h
+  obtain ⟨h', h''⟩ := h
   let I := P ⊔ Ideal.span {x}
   let J := P ⊔ Ideal.span {y}
   have h₁ : ∃ x : R, x ∈ (I : Set R) ∩ S := by
@@ -116,7 +115,7 @@ theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (h
     rw [h₂] at hT₂
     exact ha (Ideal.span_singleton_eq_bot.1 (hT₂ (Ideal.span {a}) h (zero_le (Ideal.span {a}))))
   rw [Set.nonempty_def] at hP
-  cases' hP with x hx
+  obtain ⟨x, hx⟩ := hP
   have := Set.mem_of_subset_of_mem Submonoid.subset_closure hx
   simp at this
   rw [← Submonoid.mem_toSubsemigroup] at this
@@ -158,7 +157,7 @@ theorem uniqueFactorizationMonoid_of_exists_prime [CommSemiring R] [IsDomain R]
   have ha₂ := ideal.span_ne_mem_kaplanski.set ha H
   rw [Kaplansky.set_def] at ha₂
   rcases Set.nonempty_iff_ne_empty.2 (ha₂ hP) with ⟨x, ⟨hx, hx₂⟩⟩
-  cases' Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx) with b hb
+  obtain ⟨b, hb⟩ := Ideal.mem_span_singleton'.1 (SetLike.mem_coe.1 hx)
   rw [← hb, mul_comm] at hx₂
   have hsubset : Submonoid.closure {r : R | Prime r} ≤
       Submonoid.closure {r : R | IsUnit r ∨ Prime r} := by

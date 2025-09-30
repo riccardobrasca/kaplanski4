@@ -3,13 +3,16 @@ import Kaplanski4.Oka
 
 open Ideal
 
+namespace AddedToMathlib -- PR #28477
+
 variable {R : Type*} [CommRing R]
 
-theorem nonPrincipal_maximal :
-    (∃ I : Ideal R, ¬I.IsPrincipal) → ∃ I : Ideal R, Maximal (¬·.IsPrincipal) I := by
-  intro ⟨I, hI⟩
-  obtain ⟨m, _, hm⟩ := zorn_le_nonempty₀ _ nonPrincipals_zorn I hI
-  exact ⟨m, hm⟩
+theorem nonPrincipal_maximal (h : ∃ I : Ideal R, ¬I.IsPrincipal) :
+    ∃ I : Ideal R, Maximal (¬·.IsPrincipal) I := by
+  have : ¬IsPrincipalIdealRing R := by
+    rw [isPrincipalIdealRing_iff, not_forall]
+    exact h
+  exact Ideal.exists_maximal_not_isPrincipal this
 
 theorem isOka_isPrincipal : IsOka (Submodule.IsPrincipal (R := R)) := by
   constructor
@@ -36,4 +39,6 @@ theorem isOka_isPrincipal : IsOka (Submodule.IsPrincipal (R := R)) := by
 
 theorem IsPrincipalIdealRing.of_prime' (H : ∀ (P : Ideal R), P.IsPrime → Submodule.IsPrincipal P) :
     IsPrincipalIdealRing R :=
-  ⟨isOka_isPrincipal.forall_of_forall_prime_isOka nonPrincipal_maximal H⟩
+  ⟨Ideal.forall_of_forall_prime_isOka isOka_isPrincipal nonPrincipal_maximal H⟩
+
+end AddedToMathlib

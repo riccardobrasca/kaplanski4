@@ -1,4 +1,3 @@
-import Mathlib.Algebra.BigOperators.Associated
 import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import Mathlib.RingTheory.UniqueFactorizationDomain.Ideal
 

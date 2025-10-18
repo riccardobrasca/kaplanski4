@@ -3,7 +3,7 @@ import Mathlib.RingTheory.UniqueFactorizationDomain.Ideal
 
 variable {R : Type*}
 
-/-- The set of ideals of the ring R which do not intersect the subsemigroup S -/
+/-- The set of ideals of a semiring R which do not intersect a given subsemigroup S -/
 def kaplanskySet [Semiring R] (S : Subsemigroup R) :=
   setOf fun (I : Ideal R) ↦ (I : Set R) ∩ S = ∅
 

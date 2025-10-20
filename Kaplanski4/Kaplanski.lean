@@ -5,7 +5,7 @@ variable {R : Type*}
 
 /-- The set of ideals of a semiring R which do not intersect a given subsemigroup S -/
 def kaplanskySet [Semiring R] (S : Subsemigroup R) :=
-  setOf fun (I : Ideal R) ↦ (I : Set R) ∩ S = ∅
+  { I : Ideal R | (I : Set R) ∩ S = ∅ }
 
 theorem mem_kaplanskySet_iff_inter_eq_empty [Semiring R] (S : Subsemigroup R) (P : Ideal R) :
     P ∈ kaplanskySet S ↔ (P : Set R) ∩ S = ∅ := Iff.rfl

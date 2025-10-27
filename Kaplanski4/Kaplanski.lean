@@ -30,12 +30,12 @@ theorem hypothesis_zorn_lemma [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) (
     simp
     exact hS
 
-/-- The existence of a maximal element of 'Kaplansky.set S'
-(which we will use to prove Kaplansky's criterion). -/
-theorem exists_maximal_ideal [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) :
+/-- The existence of a maximal element of a `kaplanskySet`
+(we will use this theorem to prove Kaplansky's criterion) -/
+theorem exists_mem_kaplanskySet_eq_of_le [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) :
     ∃ P ∈ kaplanskySet S, ∀ I ∈ kaplanskySet S, P ≤ I → I = P := by
   obtain ⟨P, hP⟩ := zorn_le₀ (kaplanskySet S) (hypothesis_zorn_lemma hS)
-  exact ⟨P, hP.1, fun I hI H ↦ le_antisymm (hP.2 hI H) H⟩
+  exact ⟨P, hP.1, fun _ hI H ↦ le_antisymm (hP.2 hI H) H⟩
 
 end Existence
 
@@ -108,7 +108,7 @@ theorem ideal.span_ne_mem_kaplanski.set [CommSemiring R] [IsDomain R] {a : R} (h
     rcases Submonoid.exists_multiset_of_mem_closure h with ⟨l, ⟨hl, hprod⟩⟩
     exact not_prime_zero (hl 0 (Multiset.prod_eq_zero_iff.1 hprod))
   intro h
-  rcases exists_maximal_ideal hzero with ⟨T, hT, hT₂⟩
+  rcases exists_mem_kaplanskySet_eq_of_le hzero with ⟨T, hT, hT₂⟩
   have hT₃ : T ≠ ⊥ := by
     intro h₂
     rw [h₂] at hT₂

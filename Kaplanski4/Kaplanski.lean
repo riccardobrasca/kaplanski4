@@ -12,7 +12,7 @@ theorem mem_kaplanskySet_iff_inter_eq_empty [Semiring R] (S : Subsemigroup R) (P
 
 section Existence
 
-/-- Every chain of 'Kaplansky.set S' has an upper bound. -/
+/-- Every chain of a `kaplanskySet` has an upper bound. -/
 theorem exists_mem_kaplanskySet_le [Semiring R] {S : Subsemigroup R} {C : Set (Ideal R)}
     (hS : 0 ∉ S) (hC : C ⊆ kaplanskySet S) (hC₂ : IsChain (· ≤ ·) C) :
     ∃ P ∈ kaplanskySet S, ∀ J ∈ C, J ≤ P := by

@@ -17,8 +17,8 @@ theorem exists_mem_kaplanskySet_le [Semiring R] {S : Subsemigroup R} {C : Set (I
     (hS : 0 ∉ S) (hC : C ⊆ kaplanskySet S) (hC₂ : IsChain (· ≤ ·) C) :
     ∃ P ∈ kaplanskySet S, ∀ J ∈ C, J ≤ P := by
   by_cases h : C.Nonempty
-  · obtain ⟨I, hI⟩ := h
-    refine' ⟨sSup C, _, fun z hz ↦ le_sSup hz⟩
+  · obtain ⟨_, hI⟩ := h
+    refine' ⟨sSup C, _, fun _ hz ↦ le_sSup hz⟩
     rw [mem_kaplanskySet_iff_inter_eq_empty, Set.eq_empty_iff_forall_notMem]
     rintro x hx
     rcases (Submodule.mem_sSup_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
@@ -27,8 +27,7 @@ theorem exists_mem_kaplanskySet_le [Semiring R] {S : Subsemigroup R} {C : Set (I
   · rw [Set.not_nonempty_iff_eq_empty.1 h]
     use ⊥
     rw [mem_kaplanskySet_iff_inter_eq_empty, Set.eq_empty_iff_forall_notMem]
-    simp
-    exact hS
+    simpa
 
 /-- The existence of a maximal element of a `kaplanskySet`
 (we will use this theorem to prove Kaplansky's criterion) -/

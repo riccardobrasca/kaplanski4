@@ -13,9 +13,9 @@ theorem mem_kaplanskySet_iff_inter_eq_empty [Semiring R] (S : Subsemigroup R) (P
 section Existence
 
 /-- Every chain of 'Kaplansky.set S' has an upper bound. -/
-theorem hypothesis_zorn_lemma [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) (C : Set (Ideal R))
-    (hC : C ⊆ kaplanskySet S) (hC₂ : IsChain (· ≤ ·) C) :
-    ∃ P, P ∈ kaplanskySet S ∧ ∀ J, J ∈ C → J ≤ P := by
+theorem exists_mem_kaplanskySet_le [Semiring R] {S : Subsemigroup R} {C : Set (Ideal R)}
+    (hS : 0 ∉ S) (hC : C ⊆ kaplanskySet S) (hC₂ : IsChain (· ≤ ·) C) :
+    ∃ P ∈ kaplanskySet S, ∀ J ∈ C, J ≤ P := by
   by_cases h : C.Nonempty
   · obtain ⟨I, hI⟩ := h
     refine' ⟨sSup C, _, fun z hz ↦ le_sSup hz⟩
@@ -34,7 +34,7 @@ theorem hypothesis_zorn_lemma [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) (
 (we will use this theorem to prove Kaplansky's criterion) -/
 theorem exists_mem_kaplanskySet_eq_of_le [Semiring R] {S : Subsemigroup R} (hS : 0 ∉ S) :
     ∃ P ∈ kaplanskySet S, ∀ I ∈ kaplanskySet S, P ≤ I → I = P := by
-  obtain ⟨P, hP⟩ := zorn_le₀ (kaplanskySet S) (hypothesis_zorn_lemma hS)
+  obtain ⟨P, hP⟩ := zorn_le₀ (kaplanskySet S) (fun _ ↦ exists_mem_kaplanskySet_le hS)
   exact ⟨P, hP.1, fun _ hI H ↦ le_antisymm (hP.2 hI H) H⟩
 
 end Existence

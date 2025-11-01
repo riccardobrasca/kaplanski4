@@ -1,20 +1,12 @@
-import Mathlib
 import Kaplanski4.Kaplanski
-import Kaplanski4.Cohen
+import Mathlib.Order.CompletePartialOrder
+import Mathlib.Algebra.Lie.OfAssociative
+import Mathlib.RingTheory.Finiteness.Ideal
+import Mathlib.RingTheory.Noetherian.OfPrime
+import Mathlib.RingTheory.PowerSeries.Inverse
+import Mathlib.RingTheory.PowerSeries.Trunc
 
 open PowerSeries Ideal Set BigOperators Finset
-
-namespace AddedToMathlib -- PR #24678
-
-variable {R : Type*} [CommSemiring R]
-
-lemma eq_trunc_add_X_pow_mul (g : R⟦X⟧) (n : ℕ) : g =
-    trunc n g + (X ^ n : R⟦X⟧) * mk fun m ↦ coeff (m + n) g := by
-  ext m
-  by_cases hm : m < n <;>
-  simp [coeff_trunc, hm, coeff_X_pow_mul', Nat.not_le_of_lt, Nat.le_of_not_lt]
-
-end AddedToMathlib
 
 noncomputable section
 

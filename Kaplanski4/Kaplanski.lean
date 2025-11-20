@@ -1,7 +1,10 @@
 import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import Mathlib.RingTheory.UniqueFactorizationDomain.Ideal
+import Mathlib.RingTheory.PowerSeries.Ideal
 
 variable {R : Type*}
+
+section Kaplanski
 
 /-- The set of ideals of a semiring R which do not intersect a given subsemigroup S -/
 def kaplanskySet [Semiring R] (S : Subsemigroup R) :=
@@ -175,3 +178,24 @@ theorem uniqueFactorizationMonoid_iff [CommSemiring R] [IsDomain R] (hP : (P : S
     fun H ↦ uniqueFactorizationMonoid_of_exists_prime H hP⟩
 
 end Kaplansky
+
+end Kaplanski
+section PowerSeries
+
+variable [CommRing R]
+
+open PowerSeries Set Ideal
+
+instance [hR : IsPrincipalIdealRing R] [IsDomain R] : UniqueFactorizationMonoid R⟦X⟧ := by
+  apply (uniqueFactorizationMonoid_iff ⟨_, X_prime⟩).2
+  intro P _ _
+  by_cases X ∈ P
+  · exact ⟨X, ‹_›, X_prime⟩
+  · obtain ⟨_, h⟩ := (hR.principal (P.map constantCoeff)).principal
+    obtain ⟨_, rfl, _, h⟩ := exist_eq_span_eq_ncard_of_X_notMem ‹_› (h.symm) (finite_singleton _)
+    simp only [ncard_singleton, ncard_eq_one] at h
+    obtain ⟨_, rfl⟩ := h
+    exact ⟨_, mem_span_singleton_self _,
+      (span_singleton_prime (span_singleton_eq_bot.not.1 ‹_›)).1 ‹_›⟩
+
+end PowerSeries

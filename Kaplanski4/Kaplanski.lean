@@ -2,10 +2,6 @@ import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import Mathlib.RingTheory.UniqueFactorizationDomain.Ideal
 import Mathlib.RingTheory.PowerSeries.Ideal
 
-instance (F : Type*) [Semifield F] : UniqueFactorizationMonoid F :=
-  .of_exists_prime_factors fun a ha ↦ ⟨∅, by simpa
-    using (associated_one_iff_isUnit.2 ha.isUnit).symm⟩
-
 variable {R : Type*}
 
 section Kaplanski
@@ -24,16 +20,14 @@ theorem mem_kaplanskySet_iff_inter_eq_empty : P ∈ kaplanskySet S ↔ (P : Set 
 /-- If `0 ∉ S`, then every chain in `kaplanskySet S` has an upper bound. -/
 theorem exists_mem_kaplanskySet_le {C : Set (Ideal R)} (hS : 0 ∉ S) (hC : C ⊆ kaplanskySet S)
       (hC₂ : IsChain (· ≤ ·) C) : ∃ P ∈ kaplanskySet S, ∀ J ∈ C, J ≤ P := by
-  by_cases h : C.Nonempty
-  · obtain ⟨_, hI⟩ := h
-    refine ⟨sSup C, ?_, fun _ hz ↦ le_sSup hz⟩
+  rcases C.eq_empty_or_nonempty with rfl | ⟨_, hI⟩
+  · exact ⟨⊥, by simpa [mem_kaplanskySet_iff_inter_eq_empty, eq_empty_iff_forall_notMem]⟩
+  · refine ⟨sSup C, ?_, fun _ hz ↦ le_sSup hz⟩
     rw [mem_kaplanskySet_iff_inter_eq_empty, eq_empty_iff_forall_notMem]
     intro x hx
     rcases (Submodule.mem_sSup_of_directed ⟨_, hI⟩ hC₂.directedOn).1 hx.1 with ⟨J, hJ₁, hJ₂⟩
     have hx₂ : (J : Set R) ∩ S ≠ ∅ := nonempty_iff_ne_empty.1 ⟨x, hJ₂, hx.2⟩
     exact hx₂ (mem_kaplanskySet_iff_inter_eq_empty.mp (hC hJ₁))
-  · rw [not_nonempty_iff_eq_empty.mp h]
-    exact ⟨⊥, by simpa [mem_kaplanskySet_iff_inter_eq_empty, eq_empty_iff_forall_notMem]⟩
 
 /-- If `0 ∉ S`, then there is a maximal element in `kaplanskySet S`. -/
 theorem exists_mem_kaplanskySet_eq_of_le (hS : 0 ∉ S) :
@@ -43,27 +37,19 @@ theorem exists_mem_kaplanskySet_eq_of_le (hS : 0 ∉ S) :
 
 end semiring
 
-section commsemiring
+section IsDomain
 
-variable [CommSemiring R]
+variable [CommSemiring R] [IsDomain R]
 
-theorem span_ne_mem_kaplanskiSet [IsDomain R] {a : R} (ha : a ≠ 0)
-    (H : ∀ I ≠ (⊥ : Ideal R), I.IsPrime → ∃ x ∈ I, Prime x) (hP : ∃ (r : R), Prime r) :
-    span {a} ∉ kaplanskySet (closure { r : R | Prime r }).toSubsemigroup := by
-  have hzero : 0 ∉ closure {r : R | Prime r} := by
-    intro h
-    rcases exists_multiset_of_mem_closure h with ⟨l, ⟨hl, hprod⟩⟩
+theorem span_ne_mem_kaplanskiSet {a : R} (ha : a ≠ 0)
+      (H : ∀ I ≠ (⊥ : Ideal R), I.IsPrime → ∃ x ∈ I, Prime x) :
+    span {a} ∉ kaplanskySet (closure {r : R | Prime r}).toSubsemigroup := by
+  have hzero : 0 ∉ closure {r : R | Prime r} := fun h ↦ by
+    rcases exists_multiset_of_mem_closure h with ⟨l, hl, hprod⟩
     exact not_prime_zero (hl 0 (Multiset.prod_eq_zero_iff.1 hprod))
   intro h
   rcases exists_mem_kaplanskySet_eq_of_le hzero with ⟨T, hT, hT₂⟩
-  have hT₃ : T ≠ ⊥ := by
-    intro h₂
-    rw [h₂] at hT₂
-    exact ha (span_singleton_eq_bot.1 (hT₂ (span {a}) h (zero_le (span {a}))))
-  obtain ⟨x, hx⟩ := hP
-  have := mem_of_subset_of_mem (subset_closure (s := {r : R | Prime r})) hx
-  rw [SetLike.mem_coe, ← mem_toSubsemigroup] at this
-  have := nonempty_def.2 ⟨x, this⟩
+  have hT₃ : T ≠ ⊥ := fun h₂ ↦ ha (span_singleton_eq_bot.1 ((h₂ ▸ hT₂) _ h (zero_le _)))
   have Tpri := isPrime_of_maximally_disjoint T _ hT (fun J hJ H ↦ hJ.ne (hT₂ J H hJ.le).symm)
   rcases (H T) hT₃ Tpri with ⟨x, H₃, H₄⟩
   rw [mem_kaplanskySet_iff_inter_eq_empty, eq_empty_iff_forall_notMem] at hT
@@ -71,15 +57,10 @@ theorem span_ne_mem_kaplanskiSet [IsDomain R] {a : R} (ha : a ≠ 0)
 
 /-- The other implication of Kaplansky's criterion (if every nonzero prime ideal of
 an integral domain R contains a prime element, then R is a UFD). -/
-theorem uniqueFactorizationMonoid_of_exists_prime [IsDomain R]
+theorem uniqueFactorizationMonoid_of_exists_prime
     (H : ∀ I ≠ (⊥ : Ideal R), I.IsPrime → ∃ x ∈ I, Prime x) : UniqueFactorizationMonoid R := by
-  by_cases Hf : IsField R
-  · let := Hf.toSemifield
-    infer_instance
-  obtain ⟨M, hM⟩ := exists_maximal R
-  obtain ⟨p, hp⟩ := H M (bot_lt_of_maximal M Hf).ne' hM.isPrime
   refine UniqueFactorizationMonoid.of_exists_prime_factors fun a ha ↦ ?_
-  have ha₂ := span_ne_mem_kaplanskiSet ha H ⟨p, hp.2⟩
+  have ha₂ := span_ne_mem_kaplanskiSet ha H
   rw [mem_kaplanskySet_iff_inter_eq_empty] at ha₂
   rcases nonempty_iff_ne_empty.2 ha₂ with ⟨x, hx, hx₂⟩
   obtain ⟨b, hb⟩ := mem_span_singleton'.1 hx
@@ -103,29 +84,29 @@ theorem uniqueFactorizationMonoid_of_exists_prime [IsDomain R]
 
 /-- Kaplansky's criterion (an integral domain R is a UFD if and only if every nonzero prime ideal
 contains a prime element). -/
-theorem uniqueFactorizationMonoid_iff [IsDomain R] :
+theorem uniqueFactorizationMonoid_iff :
     UniqueFactorizationMonoid R ↔ ∀ I ≠ (⊥ : Ideal R), I.IsPrime → ∃ x ∈ I, Prime x :=
   ⟨fun _ _ hI hI₂ ↦ hI₂.exists_mem_prime_of_ne_bot hI,
     fun H ↦ uniqueFactorizationMonoid_of_exists_prime H⟩
 
-end commsemiring
+end IsDomain
 
 end Kaplanski
 section PowerSeries
 
-variable [CommRing R]
+variable [CommRing R] [IsPrincipalIdealRing R] [IsDomain R]
 
 open PowerSeries Set Ideal
 
-instance [hR : IsPrincipalIdealRing R] [IsDomain R] : UniqueFactorizationMonoid R⟦X⟧ := by
-  refine uniqueFactorizationMonoid_iff.mpr (fun P _ _ ↦ ?_)
-  by_cases X ∈ P
-  · exact ⟨X, ‹_›, X_prime⟩
-  · obtain ⟨_, h⟩ := (hR.principal (P.map constantCoeff)).principal
-    obtain ⟨_, rfl, _, h⟩ := exist_eq_span_eq_ncard_of_X_notMem ‹_› (h.symm) (finite_singleton _)
+instance : UniqueFactorizationMonoid R⟦X⟧ := by
+  refine uniqueFactorizationMonoid_iff.mpr (fun P h₁ h₂ ↦ ?_)
+  by_cases hXP : X ∈ P
+  · exact ⟨X, hXP, X_prime⟩
+  · obtain ⟨_, h⟩ := (IsPrincipalIdealRing.principal (P.map constantCoeff)).principal
+    obtain ⟨_, rfl, _, h⟩ := exist_eq_span_eq_ncard_of_X_notMem hXP h.symm (finite_singleton _)
     simp only [ncard_singleton, ncard_eq_one] at h
     obtain ⟨_, rfl⟩ := h
     exact ⟨_, mem_span_singleton_self _,
-      (span_singleton_prime (span_singleton_eq_bot.not.1 ‹_›)).1 ‹_›⟩
+      (span_singleton_prime (span_singleton_eq_bot.not.1 h₁)).1 h₂⟩
 
 end PowerSeries
